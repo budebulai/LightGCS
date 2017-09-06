@@ -713,9 +713,24 @@ p, li { white-space: pre-wrap; }
           <height>690</height>
          </rect>
         </property>
-        <property name="styleSheet">
-         <string notr="true">alternate-background-color: rgb(225, 225, 225);white</string>
+        <property name="autoFillBackground">
+         <bool>true</bool>
         </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="sortingEnabled">
+         <bool>false</bool>
+        </property>
+        <attribute name="horizontalHeaderHighlightSections">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>false</bool>
+        </attribute>
        </widget>
       </widget>
       <widget class="QWidget" name="stw_params_tree">

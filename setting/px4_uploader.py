@@ -114,7 +114,7 @@ class firmware(object):
                 f = open(path, "r")
                 self.desc = json.load(f)
                 f.close()
-
+                self.description = self.desc["description"]
                 self.image = bytearray(zlib.decompress(base64.b64decode(self.desc['image'])))
 
                 # pad image to 4-byte length
@@ -167,7 +167,7 @@ class uploader(object):
         MAX_DES_LENGTH  = 20
 
         REBOOT          = b'\x30'
-        
+
         INFO_BL_REV     = b'\x01'        # bootloader protocol revision
         BL_REV_MIN      = 2              # minimum supported bootloader protocol
         BL_REV_MAX      = 5              # maximum supported bootloader protocol
@@ -177,7 +177,7 @@ class uploader(object):
 
         PROG_MULTI_MAX  = 252            # protocol max is 255, must be multiple of 4
         READ_MULTI_MAX  = 252            # protocol max is 255
-        
+
         NSH_INIT        = bytearray(b'\x0d\x0d\x0d')
         NSH_REBOOT_BL   = b"reboot -b\n"
         NSH_REBOOT      = b"reboot\n"
@@ -335,12 +335,12 @@ class uploader(object):
 
         # send a PROG_MULTI command to write a collection of bytes
         def __program_multi(self, data):
-                
+
                 if self.runningPython3 == True:
                     length = len(data).to_bytes(1, byteorder='big')
                 else:
                     length = chr(len(data))
-            
+
                 self.__send(uploader.PROG_MULTI)
                 self.__send(length)
                 self.__send(data)
@@ -349,12 +349,12 @@ class uploader(object):
 
         # verify multiple bytes in flash
         def __verify_multi(self, data):
-            
+
                 if self.runningPython3 == True:
                     length = len(data).to_bytes(1, byteorder='big')
                 else:
                     length = chr(len(data))
-                
+
                 self.__send(uploader.READ_MULTI)
                 self.__send(length)
                 self.__send(uploader.EOC)
@@ -417,7 +417,7 @@ class uploader(object):
         def __verify_v3(self, label, fw):
                 print("\n", end='')
                 self.__drawProgressBar(label, 1, 100)
-                expect_crc = fw.crc(self.fw_maxsize)                
+                expect_crc = fw.crc(self.fw_maxsize)
                 self.__send(uploader.GET_CRC
                             + uploader.EOC)
                 report_crc = self.__recv_int()
@@ -497,7 +497,7 @@ class uploader(object):
                     except Exception:
                             # ignore bad character encodings
                             pass
-                
+
                 self.__erase("Erase  ")
                 self.__program("Program", fw)
 
@@ -509,7 +509,7 @@ class uploader(object):
 #                print("\nRebooting.\n")
                 self.__reboot()
                 self.port.close()
-                
+
         def send_reboot(self):
                 try:
                     # try reboot via NSH first
@@ -524,15 +524,17 @@ class uploader(object):
                     return
 
 
-def firmware_uploader(obj, file, port, baud):
+def px4_uploader(obj, file, port, baud):
     # warn people about ModemManager which interferes badly with Pixhawk
     if os.path.exists("/usr/sbin/ModemManager"):
             obj.fw_upload_state.setText("WARNING: You should uninstall ModemManager as it conflicts with any non-modem serial device (like Pixhawk)")
     # Load the firmware file
     fw = firmware(file)
-    obj.fw_upload_state.setText("Loaded firmware for %x,%x, size: %d bytes, waiting for the bootloader..." % (fw.property('board_id'), fw.property('board_revision'), fw.property('image_size')))
-#print("If the board does not respond within 1-2 seconds, unplug and re-plug the USB connector.")
+    obj.fw_upload_state.setText(fw.description)
+    # print(fw.description)
+    # print("If the board does not respond within 1-2 seconds, unplug and re-plug the USB connector.")
 
+"""
     # Spin waiting for a device to show up
     try:
         while True:
@@ -586,11 +588,11 @@ def firmware_uploader(obj, file, port, baud):
 
                 # we could loop here if we wanted to wait for more boards...
                 return True
-    
+
     # CTRL+C aborts the upload/spin-lock by interrupt mechanics
     except KeyboardInterrupt:
         obj.fw_upload_state.setText("\n Upload aborted by user.")
         return False
-    
+"""
 if __name__ == "__main__":
     firmware_uploader("com3", 115200, r"firmware")
