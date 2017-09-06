@@ -1,0 +1,9 @@
+*.pyc
+.settings
+.project
+.pydevproject
+message_definitions
+LightGCS_image
+_eric6project
+*.qrc
+*.e4p
