@@ -184,12 +184,11 @@ class uploader(object):
         MAVLINK_REBOOT_ID1 = bytearray(b'\xfe\x21\x72\xff\x00\x4c\x00\x00\x80\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x00\x00\x48\xf0')
         MAVLINK_REBOOT_ID0 = bytearray(b'\xfe\x21\x45\xff\x00\x4c\x00\x00\x80\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x00\x00\x00\xd7\xac')
 
-        def __init__(self, obj, portname, baudrate):
+        def __init__(self, portname, baudrate):
                 # open the port, keep the default timeout short so we can poll quickly
                 self.port = serial.Serial(portname, baudrate, timeout=0.5)
                 self.otp = b''
                 self.sn = b''
-                self.obj = obj
                 # Detect python version
                 if sys.version_info[0] < 3:
                     self.runningPython3 = False
@@ -239,7 +238,7 @@ class uploader(object):
                             + uploader.EOC)
                 self.__getSync()
 
-        def __trySync(self):
+        def trySync(self):
                 try:
                     self.port.flush()
                     if (self.__recv() != self.INSYNC):
@@ -302,36 +301,15 @@ class uploader(object):
                     progress = maxVal
 
                 percent = (float(progress) / float(maxVal)) * 100.0
-                self.obj.fw_progressbar.setProperty("value", percent)
 
 #                sys.stdout.write("\r%s: [%-20s] %.1f%%" % (label, '='*int(percent/5.0), percent))
 #                sys.stdout.flush()
 
 
         # send the CHIP_ERASE command and wait for the bootloader to become ready
-        def __erase(self, label):
-                print("\n", end='')
+        def erase(self):
                 self.__send(uploader.CHIP_ERASE
                             + uploader.EOC)
-
-                # erase is very slow, give it 20s
-                deadline = time.time() + 20.0
-                while time.time() < deadline:
-
-                        #Draw progress bar (erase usually takes about 9 seconds to complete)
-                        estimatedTimeRemaining = deadline-time.time()
-                        if estimatedTimeRemaining >= 9.0:
-                            self.__drawProgressBar(label, 20.0-estimatedTimeRemaining, 9.0)
-                        else:
-                            self.__drawProgressBar(label, 10.0, 10.0)
-                            sys.stdout.write(" (timeout: %d seconds) " % int(deadline-time.time()) )
-                            sys.stdout.flush()
-
-                        if self.__trySync():
-                            self.__drawProgressBar(label, 10.0, 10.0)
-                            return;
-
-                raise RuntimeError("timed out waiting for erase")
 
         # send a PROG_MULTI command to write a collection of bytes
         def __program_multi(self, data):
@@ -368,7 +346,7 @@ class uploader(object):
                 return True
 
         # send the reboot command
-        def __reboot(self):
+        def reboot(self):
                 self.__send(uploader.REBOOT
                             + uploader.EOC)
                 self.port.flush()
@@ -382,41 +360,25 @@ class uploader(object):
                 return [seq[i:i+length] for i in range(0, len(seq), length)]
 
         # upload code
-        def __program(self, label, fw):
-                print("\n", end='')
+        def program(self, fw):
                 code = fw.image
                 groups = self.__split_len(code, uploader.PROG_MULTI_MAX)
 
-                uploadProgress = 0
                 for bytes in groups:
                         self.__program_multi(bytes)
 
-                        #Print upload progress (throttled, so it does not delay upload progress)
-                        uploadProgress += 1
-                        if uploadProgress % 256 == 0:
-                            self.__drawProgressBar(label, uploadProgress, len(groups))
-                self.__drawProgressBar(label, 100, 100)
-
         # verify code
-        def __verify_v2(self, label, fw):
-                print("\n", end='')
+        def verify_v2(self, fw):
                 self.__send(uploader.CHIP_VERIFY
                             + uploader.EOC)
                 self.__getSync()
                 code = fw.image
                 groups = self.__split_len(code, uploader.READ_MULTI_MAX)
-                verifyProgress = 0
                 for bytes in groups:
-                        verifyProgress += 1
-                        if verifyProgress % 256 == 0:
-                            self.__drawProgressBar(label, verifyProgress, len(groups))
                         if (not self.__verify_multi(bytes)):
                                 raise RuntimeError("Verification failed")
-                self.__drawProgressBar(label, 100, 100)
 
-        def __verify_v3(self, label, fw):
-                print("\n", end='')
-                self.__drawProgressBar(label, 1, 100)
+        def verify_v3(self, fw):
                 expect_crc = fw.crc(self.fw_maxsize)
                 self.__send(uploader.GET_CRC
                             + uploader.EOC)
@@ -427,7 +389,6 @@ class uploader(object):
                         print("Expected 0x%x" % expect_crc)
                         print("Got      0x%x" % report_crc)
                         raise RuntimeError("Program CRC failed")
-                self.__drawProgressBar(label, 100, 100)
 
         def __set_boot_delay(self, boot_delay):
                 self.__send(uploader.SET_BOOT_DELAY
@@ -439,28 +400,13 @@ class uploader(object):
         def identify(self):
                 # make sure we are in sync before starting
                 self.__sync()
-
                 # get the bootloader protocol ID first
                 self.bl_rev = self.__getInfo(uploader.INFO_BL_REV)
-                if (self.bl_rev < uploader.BL_REV_MIN) or (self.bl_rev > uploader.BL_REV_MAX):
-                        print("Unsupported bootloader protocol %d" % uploader.INFO_BL_REV)
-                        raise RuntimeError("Bootloader protocol mismatch")
-
                 self.board_type = self.__getInfo(uploader.INFO_BOARD_ID)
                 self.board_rev = self.__getInfo(uploader.INFO_BOARD_REV)
                 self.fw_maxsize = self.__getInfo(uploader.INFO_FLASH_SIZE)
 
-        # upload the firmware
-        def upload(self, fw):
-                # Make sure we are doing the right thing
-                if self.board_type != fw.property('board_id'):
-                        msg = "Firmware not suitable for this board (board_type=%u board_id=%u)" % (
-                                self.board_type, fw.property('board_id'))
-                        print("WARNING: %s" % msg)
-                        raise IOError(msg)
-                if self.fw_maxsize < fw.property('image_size'):
-                        raise RuntimeError("Firmware image is too large for this board")
-
+        def detect(self):
                 # OTP added in v4:
                 if self.bl_rev > 3:
                     for byte in range(0,32*6,4):
@@ -497,18 +443,17 @@ class uploader(object):
                     except Exception:
                             # ignore bad character encodings
                             pass
-
-                self.__erase("Erase  ")
-                self.__program("Program", fw)
-
-                if self.bl_rev == 2:
-                        self.__verify_v2("Verify ", fw)
-                else:
-                        self.__verify_v3("Verify ", fw)
-
-#                print("\nRebooting.\n")
-                self.__reboot()
-                self.port.close()
+        # upload the firmware
+        def upload(self, fw):
+                self.program(fw)
+                #
+                # if self.bl_rev == 2:
+                #         self.__verify_v2("Verify ", fw)
+                # else:
+                #         self.__verify_v3("Verify ", fw)
+                #
+                # self.__reboot()
+                # self.port.close()
 
         def send_reboot(self):
                 try:
@@ -523,76 +468,87 @@ class uploader(object):
                 except:
                     return
 
-
-def px4_uploader(obj, file, port, baud):
+"""
+def px4_uploader(obj, file, ports, baud):
     # warn people about ModemManager which interferes badly with Pixhawk
     if os.path.exists("/usr/sbin/ModemManager"):
-            obj.fw_upload_state.setText("WARNING: You should uninstall ModemManager as it conflicts with any non-modem serial device (like Pixhawk)")
+        obj.fw_upload_state.setText("WARNING: You should uninstall ModemManager as it conflicts with any non-modem serial device (like Pixhawk)")
     # Load the firmware file
     fw = firmware(file)
     obj.fw_upload_state.setText(fw.description)
-    # print(fw.description)
-    # print("If the board does not respond within 1-2 seconds, unplug and re-plug the USB connector.")
 
-"""
+
     # Spin waiting for a device to show up
     try:
         while True:
+            for port in ports:
                 # create an uploader attached to the port
                 try:
-                        if "linux" in _platform:
-                        # Linux, don't open Mac OS and Win ports
-                                if not "COM" in port and not "tty.usb" in port:
-                                        up = uploader(obj, port, baud)
-                        elif "darwin" in _platform:
-                                # OS X, don't open Windows and Linux ports
-                                if not "COM" in port and not "ACM" in port:
-                                        up = uploader(obj, port, baud)
-                        elif "win" in _platform:
-                                # Windows, don't open POSIX ports
-                                up = uploader(obj, port, baud)
+                    bauds = [115200]
+                    if baud not in bauds:
+                        baud = 115200
+
+                    if "linux" in _platform:
+                    # Linux, don't open Mac OS and Win ports
+                        if not "COM" in port and not "tty.usb" in port:
+                            up = uploader(obj, port, baud)
+                    elif "darwin" in _platform:
+                        # OS X, don't open Windows and Linux ports
+                        if not "COM" in port and not "ACM" in port:
+                            up = uploader(obj, port, baud)
+                    elif "win" in _platform:
+                        # Windows, don't open POSIX ports
+                        up = uploader(obj, port, baud)
                 except Exception:
-                        # open failed, rate-limit our attempts
-                        time.sleep(0.05)
+                    # open failed, rate-limit our attempts
+                    time.sleep(0.05)
+                    print("open failed")
+                    continue
 
                 # port is open, try talking to it
                 try:
-                        # identify the bootloader
-                        up.identify()
-                        obj.fw_upload_state.setText("Found board %x,%x bootloader rev %x on %s" % (up.board_type, up.board_rev, up.bl_rev, port))
+                    # identify the bootloader
+                    up.identify()
+                    obj.fw_upload_state.setText("Found board %x,%x bootloader rev %x on %s" % (up.board_type, up.board_rev, up.bl_rev, port))
 
                 except Exception:
-                        # most probably a timeout talking to the port, no bootloader, try to reboot the board
-                        obj.fw_upload_state.setText("attempting reboot on %s..." % port)
-                        obj.fw_upload_state.setText("if the board does not respond, unplug and re-plug the USB connector.")
-                        up.send_reboot()
+                    # most probably a timeout talking to the port, no bootloader, try to reboot the board
+                    print("attempting reboot on %s..." % port)
+                    print("if the board does not respond, unplug and re-plug the USB connector.")
+                    up.send_reboot()
 
-                        # wait for the reboot, without we might run into Serial I/O Error 5
-                        time.sleep(0.5)
+                    # wait for the reboot, without we might run into Serial I/O Error 5
+                    time.sleep(0.5)
 
-                        # always close the port
-                        up.close()
+                    # always close the port
+                    up.close()
+                    continue
+
                 try:
-                        # ok, we have a bootloader, try flashing it
-                        up.upload(fw)
+                    # ok, we have a bootloader, try flashing it
+                    up.upload(fw)
 
                 except RuntimeError as ex:
-                        # print the error
-                        obj.fw_upload_state.setText("\nERROR: %s" % ex.args)
+                    # print the error
+                    print("ERROR: %s" % ex.args)
 
                 except IOError:
-                        up.close();
+                    up.close();
                 finally:
-                        # always close the port
-                        up.close()
+                    # always close the port
+                    up.close()
 
                 # we could loop here if we wanted to wait for more boards...
-                return True
+                os._exit()
+
+            # Delay retries to < 20 Hz to prevent spin-lock from hogging the CPU
+            time.sleep(0.05)
 
     # CTRL+C aborts the upload/spin-lock by interrupt mechanics
     except KeyboardInterrupt:
-        obj.fw_upload_state.setText("\n Upload aborted by user.")
+        print("Upload aborted by user.")
         return False
-"""
+
 if __name__ == "__main__":
-    firmware_uploader("com3", 115200, r"firmware")
+    px4_uploader("com3", 115200, r"firmware")
+"""

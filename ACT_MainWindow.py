@@ -10,7 +10,7 @@ from PyQt5.QtGui import QStandardItemModel,QStandardItem
 from Ui_MainWindow import Ui_MainWindow
 from pymavlink import mavutil
 from dronekit import connect
-from setting import px4_uploader
+from setting.px4_uploader import firmware,uploader
 import time
 import threading
 
@@ -277,8 +277,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         @type QString
         """
         # TODO: not implemented yet
-        if self.serial_list:
-            self.current_port = p0
+        self.current_port = p0
 
     @pyqtSlot(QString)
     def on_cb_comm_rate_currentIndexChanged(self, p0):
@@ -289,8 +288,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         @type QString
         """
         # TODO: not implemented yet
-        if self.serial_list:
-            self.current_baud = int(p0)
+        self.current_baud = int(p0)
 
     def pb_connection_reset(self):
         self.pb_connection.setText("CONNECT")
@@ -391,15 +389,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fp, _ = QFileDialog.getOpenFileName(self, "选择固件", "", "APM Firmware Files (*.px4;*.elf);;All Files (*)", options = opt)
 
         if not fp:
+            self.upload_state_update("No Valid Firmware!")
             return
-        self.print_info(fp)
+        #运行一次，防止飞控强制断开，如断开USB线
+        self.upload_complete = False
+        self.combobox_port_update()
         fw_thread = threading.Thread(target=self.firmware_uploader,args=(fp,))
         fw_thread.setDaemon(True)
         fw_thread.start()
 
-    def firmware_uploader(self, fp):
+        if self.upload_complete:
+            fw_thread.join()
+
+    def firmware_uploader(self,fp):
         if self.connection:
-            self.print_info("Please unconnect apm!")
+            self.upload_state_update("Please unconnect apm!")
             return
 
         if not self.serial_list:
@@ -408,18 +412,158 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 time.sleep(1)
                 count += 1
                 info = "Plugin flight controller board, remaining: %s s"%(30 - count)
-                self.fw_upload_state.setText(info)
+                self.upload_state_update(info)
                 self.combobox_port_update()
             if count >= 30:
-                self.fw_upload_state.setText("Time Out!")
-                fw_thread.join()
+                self.upload_state_update("Time Out!")
                 return
 
-        px4_uploader.px4_uploader(self,fp,self.current_port,self.current_baud)
-        fw_thread.join()
-        
+        self.upload_state_update(fp)
+        # self.print_info(fp)
+        # Load the firmware file
+        fw = firmware(fp)
+        self.upload_state_update(fw.description)
+        count = 0
+        while count < 60:
+            # Spin waiting for a device to show up
+            try:
+                baud = 115200
+                for port in self.serial_list_device:
+                    self.print_info("try open port: %s, baud:%s"%(port,str(baud)))
+                    # create an uploader attached to the port
+                    try:
+                        # Windows, don't open POSIX ports
+                        up = uploader(port, baud)
+                    except Exception:
+                        # open failed, rate-limit our attempts
+                        self.print_info("Open port failed! Unplug and re-plug the USB connector.")
+                        time.sleep(0.05)
+                        continue
+
+                    # port is open, try talking to it
+                    try:
+                        # identify the bootloader
+                        up.identify()
+                    except Exception:
+                        # most probably a timeout talking to the port, no bootloader, try to reboot the board
+                        self.print_info("attempting reboot on %s..." % port)
+                        self.print_info("if the board does not respond, unplug and re-plug the USB connector.")
+                        up.send_reboot()
+                        # wait for the reboot, without we might run into Serial I/O Error 5
+                        time.sleep(0.5)
+                        # always close the port
+                        up.close()
+                        continue
+
+                    try:
+                        if (up.bl_rev < uploader.BL_REV_MIN) or (up.bl_rev > uploader.BL_REV_MAX):
+                            msg = "Unsupported bootloader protocol %d" % uploader.INFO_BL_REV
+                            raise RuntimeError(msg)
+                        # Make sure we are doing the right thing
+                        elif up.board_type != fw.property('board_id'):
+                            msg = "Firmware not suitable for this board (board_type=%u board_id=%u)" % (up.board_type, fw.property('board_id'))
+                            raise RuntimeError(msg)
+                        elif up.fw_maxsize < fw.property('image_size'):
+                            msg = "Firmware image is too large for this board"
+                            raise RuntimeError(msg)
+                        # elif 板载固件hash值与欲烧录的固件hash值一致，返回，不重复下载
+                    except RuntimeError as e:
+                            time.sleep(0.05)
+                            up.close()
+                            self.upload_state_update("WARNING:"+str(e))
+                            self.upload_complete = True
+                            return
+
+                    up.detect()
+
+                    self.upload_state_update("Found board %s, bootloader rev %x on %s" % (up.otp_id.decode('Latin-1'), up.bl_rev, port))
+                    # self.print_info("Found board %x,%x bootloader rev %x on %s" % (up.board_type, up.board_rev, up.bl_rev, port))
+                    start = time.time()
+                    try:
+                        label = "Erase Flash"
+                        # ok, we have a bootloader, try flashing it
+                        up.erase()
+                        # erase is very slow, give it 20s
+                        deadline = time.time() + 20.0
+                        while time.time() < deadline:
+                            #Draw progress bar (erase usually takes about 9 seconds to complete)
+                            # stucked often
+                            estimatedTimeRemaining = deadline - time.time()
+                            if estimatedTimeRemaining >= 9.0:
+                                self.drawProgressBar(label, 20.0-estimatedTimeRemaining, 9.0)
+                            else:
+                                label = "timeout: %d seconds" % int(deadline-time.time())
+                                self.drawProgressBar(label, 10.0, 10.0)
+                            if up.trySync():
+                                label = "Erase Done. Programing..."
+                                self.drawProgressBar(label, 10.0, 10.0)
+                                break
+                        else:
+                            raise RuntimeError("timed out waiting for erase")
+
+                    except RuntimeError as ex:
+                        # print the error
+                        self.upload_state_update("ERROR: %s" % str(ex))
+                        up.close()
+                        continue
+                    except IOError:
+                        up.close()
+                        continue
+
+                    try:
+                        up.program(fw)
+                        label = "Program Done. Verifing..."
+                        self.drawProgressBar(label, 100, 100)
+
+                        if up.bl_rev == 2:
+                            up.verify_v2(fw)
+                        else:
+                            up.verify_v3(fw)
+                        label = "Done"
+                        self.drawProgressBar(label, 100, 100)
+                        sec = time.time() - start
+
+                    except RuntimeError as ex:
+                        # print the error
+                        self.upload_state_update("ERROR: %s" % str(ex))
+                        up.close()
+                    except IOError:
+                        up.close()
+                    finally:
+                        up.reboot()
+                        # always close the port
+                        up.close()
+                        print "time for uploading firmware : %f s"%(sec)
+                        self.upload_complete = True
+                        return
+
+            # CTRL+C aborts the upload/spin-lock by interrupt mechanics
+            except KeyboardInterrupt:
+                print("Upload aborted by user.")
+                self.upload_complete = True
+                return False
+            # px4_uploader.px4_uploader(self,fp,self.serial_list_device,self.current_baud)
+            # Delay retries to < 20 Hz to prevent spin-lock from hogging the CPU
+            time.sleep(0.05)
+            count += 1
+        self.upload_state_update("Time Out")
+        self.upload_complete = True
+
+
     def print_info(self,str):
         self.tb_console.append(str)
+
+    def upload_state_update(self,str):
+        self.fw_upload_state.setText(str)
+
+    def drawProgressBar(self,label,progress,maxVal):
+        if maxVal < progress:
+            progress = maxVal
+
+        percent = int(float(progress) / float(maxVal) * 100)
+        self.fw_upload_state.setText(label)
+        self.fw_progressbar.setValue(percent)
+
 
 if __name__ == "__main__":
     import sys

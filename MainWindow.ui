@@ -165,7 +165,7 @@
      </sizepolicy>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="stw_setter">
      <widget class="QTextBrowser" name="tb_console">
