@@ -5,12 +5,13 @@ Module implementing MainWindow.
 """
 
 from PyQt5.QtCore import pyqtSlot, Qt, QEvent
-from PyQt5.QtWidgets import QApplication, QMainWindow,QFileDialog,QHeaderView
+from PyQt5.QtWidgets import QApplication, QMainWindow,QFileDialog,QHeaderView, QMessageBox,QButtonGroup
 from PyQt5.QtGui import QStandardItemModel,QStandardItem
 from Ui_MainWindow import Ui_MainWindow
 from pymavlink import mavutil
 from dronekit import connect
 from setting.px4_uploader import firmware,uploader
+import os
 import time
 import threading
 
@@ -156,6 +157,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if e.type() == QEvent.MouseButtonPress:
                 self.combobox_port_update()
                 return False
+
+        if obj == self.cb_motor_type:
+            if e.type() == QEvent.MouseButtonPress:
+                self.cb_motor_type_update()
+                return False
+
         return False
 
     def reset_gv_btns_icon(self):
@@ -185,6 +192,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def on_exts_mouseClicked(self, e):
         self.on_mouse_pressed_gv_btns(self.gv_exts, e)
+        self.exts_window_init()
 
     @pyqtSlot()
     def on_pb_params_table_clicked(self):
@@ -564,6 +572,111 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.fw_upload_state.setText(label)
         self.fw_progressbar.setValue(percent)
 
+    def exts_window_init(self):
+        self.cb_motor_type.installEventFilter(self)
+        self.ext_btns_init()
+
+    def ext_btns_init(self):
+        self.ext_btns = QButtonGroup(self)
+        self.ext_btns.setExclusive(True)
+        self.ext_btns.addButton(self.rb_xrotor_calc)
+        self.ext_btns.setId(self.rb_xrotor_calc,0)
+
+        self.ext_btns.addButton(self.rb_fixedwing_calc)
+        self.ext_btns.setId(self.rb_fixedwing_calc,1)
+
+        self.ext_btns.buttonClicked.connect(self.ext_btns_update)
+
+        self.rb_xrotor_calc.setChecked(True)
+        self.stw_exts_sub.setCurrentIndex(0)
+        self.xrotor_params_init()
+
+    def ext_btns_update(self, button):
+        id = self.ext_btns.checkedId()
+        self.stw_exts_sub.setCurrentIndex(id)
+
+    @pyqtSlot()
+    def on_pb_xrotor_calc_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        # TODO: not implemented yet
+        param_keys = ["weight","frame","motor","propeller","power"]
+        param_values = [self.le_weight.text(), self.cb_copter_frame.currentText(), self.cb_motor_type.currentText(), self.cb_prop_type.currentText(), self.le_power_given.text()]
+        params = dict(zip(param_keys, param_values))
+
+        if self.check_xrotor_params(params):
+            print "Pass"
+            #xrotor_estimate(params)
+        else:
+            """
+            StandardButton QMessageBox::critical(
+            QWidget *parent,
+            const QString &title,
+            const QString &text,
+            StandardButtons buttons = Ok,
+            StandardButton defaultButton = NoButton)
+            """
+            mb_text = "You have selected parameters below"
+            for key,value in params.items():
+                key += ":\t"+str(value)
+                mb_text += "\n"+key
+            QMessageBox.critical(self, "Parameters Invalid", mb_text)
+
+    def check_xrotor_params(self, params):
+        if not params["weight"]:
+            return False
+        try:
+            "convert string weight to int"
+            params["weight"] = int(params["weight"])
+
+            if params["power"]:
+                params["power"] = int(params["power"])
+        except Exception:
+            return False
+
+        return True
+
+    def cb_motor_type_update(self):
+        path = os.path.split(os.path.realpath(__file__))[0] + "/ext_tools/rotor_db"
+        files = os.listdir(path)
+        motor_list = [""]
+        for f in files:
+            f = os.path.splitext(f)
+            if f[1] == ".csv":
+                motor_list.append(f[0])
+        self.cb_motor_type.clear()
+        self.cb_motor_type.addItems(motor_list)
+
+    def xrotor_params_init(self):
+        """
+        Init xrotor groupbox all QCombobox
+        """
+        volt_list = [""]
+        for i in range(2,13):
+            item = "{}S--{:.1f}V".format(i,i*3.7)
+            volt_list.append(item)
+        self.cb_volt.addItems(volt_list)
+
+        self.cb_copter_frame.addItems(["","Quad","Hexa","Octo"])
+
+        "之后能搜集到基础数据再来更改"
+        propeller_size = ["","2995","3010"]
+        self.cb_prop_type.addItems(propeller_size)
+
+        self.cb_motor_type_update()
+
+    @pyqtSlot()
+    def on_pb_xrotor_reset_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        self.le_weight.setText("")
+        self.cb_volt.setCurrentText("")
+        self.cb_copter_frame.setCurrentText("")
+        self.cb_motor_type.setCurrentText("")
+        self.cb_prop_type.setCurrentText("")
+        self.le_power_given.setText("")
 
 if __name__ == "__main__":
     import sys
