@@ -595,27 +595,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         id = self.ext_btns.checkedId()
         self.stw_exts_sub.setCurrentIndex(id)
 
+    def xrotor_estimate(self, params):
+        try:
+            from ext_tools import xrotor_estimator
+        escept Exception:
+            pass
+        pass
+
     @pyqtSlot()
     def on_pb_xrotor_calc_clicked(self):
         """
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        param_keys = ["weight","frame","motor","propeller","power"]
-        param_values = [self.le_weight.text(), self.cb_copter_frame.currentText(), self.cb_motor_type.currentText(), self.cb_prop_type.currentText(), self.le_power_given.text()]
+        param_keys = ["weight","voltage","frame","motor","propeller","power"]
+        param_values = [self.le_weight.text(), self.cb_volt.currentText(), self.cb_copter_frame.currentText(), self.cb_motor_type.currentText(), self.cb_prop_type.currentText(), self.le_power_given.text()]
         params = dict(zip(param_keys, param_values))
 
         if self.check_xrotor_params(params):
-            print "Pass"
-            #xrotor_estimate(params)
+            self.xrotor_estimate(params)
         else:
             """
             StandardButton QMessageBox::critical(
-            QWidget *parent,
-            const QString &title,
-            const QString &text,
-            StandardButtons buttons = Ok,
-            StandardButton defaultButton = NoButton)
+                QWidget *parent,
+                const QString &title,
+                const QString &text,
+                StandardButtons buttons = Ok,
+                StandardButton defaultButton = NoButton)
             """
             mb_text = "You have selected parameters below"
             for key,value in params.items():
@@ -629,12 +635,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             "convert string weight to int"
             params["weight"] = int(params["weight"])
+            assert params["weight"] > 0
 
             if params["power"]:
                 params["power"] = int(params["power"])
+                assert params["power"] > 0
         except Exception:
             return False
-
         return True
 
     def cb_motor_type_update(self):

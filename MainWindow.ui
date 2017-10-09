@@ -997,7 +997,7 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="toolTip">
-          <string>weight of copter</string>
+          <string>weight of copter, must be int</string>
          </property>
         </widget>
         <widget class="QLineEdit" name="le_power_given">
