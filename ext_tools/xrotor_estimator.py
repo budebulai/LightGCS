@@ -1,12 +1,10 @@
 # -*- coding:utf-8 -*-
 
-try:
-    import numpy as np
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    import statsmodels.formula.api as smf
-except Exception as e:
-    print("导入库出错",str(e))
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.formula.api as smf
 
 
 """
@@ -445,16 +443,57 @@ class rotorModel():
             Tb = (Cb - Cmin) / Ib * 60 / 1000
             Cb : 电池容量，mAh
             Cmin : 电池放电剩余容量，mAh
+
+    六、性能参数
+        悬停时间
+        油门百分比
+        最大载重
+        最大倾斜角
+        最大飞行速度
+        最大飞行距离
+        综合飞行时间
+        抗风等级
     """
-    def __init__(self, motor):
+    def __init__(self, database, params):
         """
-        motor为电机实例
+        检索电机测试数据库，查询相应尺寸桨测试数据，计算拉力、扭矩系数
         
         """
         pass
 
-def xrotor_estimate(params):
+class rotorReal():
+    """
+    读取电机测试数据，计算拉力-功率关系系数
+    """
+    def __init__(self, data, params):
+        pass
+
+class report_output():
+    """
+    生成markdown文件，并用浏览器打开
+    """
     pass
+
+def parameter_convert(params):
+    #["weight","frame","axisDist","height","temperature","motor","propeller","voltage","capacity","residual"]
+    uav_frame = {"Quad":4,"Hexa":6,"Octo":8}
+    params["frame"] = uav_frame.get(params["frame"],4)
+
+    if params["voltage"]:
+        volt = float(params["voltage"].split("--")[1].rstrip('V'))
+        # print volt
+        params["voltage"] = volt
+
+def xrotor_estimate(path,params):
+    fName = params.get("motor","")+".csv"
+    fPath = os.path.join(path,fName)
+    if not os.path.exists(fPath):
+        return False
+    parameter_convert(params)
+
+    motor_data = pd.read_csv(fPath)
+
+
 
 if __name__ == "__main__":
     file_path  = r'E:\DATAANALYSE\UAV\copter\motor_dataset\TMotorU8KV135.csv'

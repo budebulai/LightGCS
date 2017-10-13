@@ -5,12 +5,21 @@ Module implementing MainWindow.
 """
 
 from PyQt5.QtCore import pyqtSlot, Qt, QEvent
-from PyQt5.QtWidgets import QApplication, QMainWindow,QFileDialog,QHeaderView, QMessageBox,QButtonGroup
+from PyQt5.QtWidgets import QApplication, \
+                            QMainWindow,\
+                            QFileDialog,\
+                            QHeaderView, \
+                            QMessageBox,\
+                            QButtonGroup, \
+                            QComboBox, \
+                            QTabWidget,\
+                            QListWidgetItem
 from PyQt5.QtGui import QStandardItemModel,QStandardItem
 from Ui_MainWindow import Ui_MainWindow
 from pymavlink import mavutil
 from dronekit import connect
 from setting.px4_uploader import firmware,uploader
+from ext_tools.sql_tool import *
 import os
 import time
 import threading
@@ -579,11 +588,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def ext_btns_init(self):
         self.ext_btns = QButtonGroup(self)
         self.ext_btns.setExclusive(True)
-        self.ext_btns.addButton(self.rb_xrotor_calc)
-        self.ext_btns.setId(self.rb_xrotor_calc,0)
 
-        self.ext_btns.addButton(self.rb_fixedwing_calc)
-        self.ext_btns.setId(self.rb_fixedwing_calc,1)
+        # 附加功能选项按顺序添加到此列表
+        ext_btns_list = [self.rb_xrotor_calc,self.rb_fixedwing_calc,self.rb_tiltrotor_calc,self.rb_rotor_database]
+
+        for i in range(len(ext_btns_list)):
+            self.ext_btns.addButton(ext_btns_list[i])
+            self.ext_btns.setId(ext_btns_list[i],i)
 
         self.ext_btns.buttonClicked.connect(self.ext_btns_update)
 
@@ -591,16 +602,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.stw_exts_sub.setCurrentIndex(0)
         self.xrotor_params_init()
 
+
     def ext_btns_update(self, button):
         id = self.ext_btns.checkedId()
         self.stw_exts_sub.setCurrentIndex(id)
 
     def xrotor_estimate(self, params):
-        try:
-            from ext_tools import xrotor_estimator
-        escept Exception:
-            pass
-        pass
+        from ext_tools import xrotor_estimator
+        path = os.path.split(os.path.realpath(__file__))[0] + "/ext_tools/rotor_db"
+        xrotor_estimator.xrotor_estimate(path, params)
 
     @pyqtSlot()
     def on_pb_xrotor_calc_clicked(self):
@@ -608,12 +618,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        param_keys = ["weight","voltage","frame","motor","propeller","power"]
-        param_values = [self.le_weight.text(), self.cb_volt.currentText(), self.cb_copter_frame.currentText(), self.cb_motor_type.currentText(), self.cb_prop_type.currentText(), self.le_power_given.text()]
-        params = dict(zip(param_keys, param_values))
+        # get params
+        param_values = []
+        for i in range(len(self.xrotor_params)):
+            if isinstance(self.xrotor_params[i],QComboBox):
+                param_values.append(self.xrotor_params[i].currentText())
+            else:
+                param_values.append(self.xrotor_params[i].text())
+        params = dict(zip(self.xrotor_params_key, param_values))
 
         if self.check_xrotor_params(params):
-            self.xrotor_estimate(params)
+            xrotor_estimate_thread = threading.Thread(target=self.xrotor_estimate,args=(params,))
+            xrotor_estimate_thread.setDaemon(True)
+            xrotor_estimate_thread.start()
         else:
             """
             StandardButton QMessageBox::critical(
@@ -630,22 +647,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, "Parameters Invalid", mb_text)
 
     def check_xrotor_params(self, params):
-        if not params["weight"]:
+        if not (params["weight"] and params["frame"] and params["motor"] and params["propeller"]):
             return False
         try:
             "convert string weight to int"
             params["weight"] = int(params["weight"])
             assert params["weight"] > 0
 
-            if params["power"]:
-                params["power"] = int(params["power"])
-                assert params["power"] > 0
+            for i in range(len(self.xrotor_params_key)):
+                if isinstance(self.xrotor_params[i],QComboBox):
+                    continue
+                if params[self.xrotor_params_key[i]]:
+                    params[self.xrotor_params_key[i]] = int(params[self.xrotor_params_key[i]])
+                    if self.xrotor_params_key[i] == "temperature":
+                        continue
+                    assert params[self.xrotor_params_key[i]] > 0
+
         except Exception:
             return False
         return True
 
     def cb_motor_type_update(self):
-        path = os.path.split(os.path.realpath(__file__))[0] + "/ext_tools/rotor_db"
+        path = os.path.split(os.path.realpath(__file__))[0] + "\\ext_tools\\rotor_db"
         files = os.listdir(path)
         motor_list = [""]
         for f in files:
@@ -659,31 +682,140 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Init xrotor groupbox all QCombobox
         """
+        self.xrotor_params = [self.le_weight,self.cb_copter_frame,self.le_uav_axisDist,self.le_flight_height,self.le_ground_temperature,\
+                            self.cb_motor_type,self.cb_prop_type,\
+                            self.cb_volt,self.le_battery_capacity,self.le_capacity_residual]
+        self.xrotor_params_key = ["weight","frame","axisDist","height","temperature","motor","propeller","voltage","capacity","residual"]
+
+        self.cb_copter_frame.clear()
+        self.cb_copter_frame.addItems(["","Quad","Hexa","Octo"])
+
+        #"之后能搜集到基础数据再来更改"
+        propeller_size = ["","2685","2788","2892","2995","3010"]
+        self.cb_prop_type.clear()
+        self.cb_prop_type.addItems(propeller_size)
+
+        self.cb_motor_type_update()
+
         volt_list = [""]
         for i in range(2,13):
             item = "{}S--{:.1f}V".format(i,i*3.7)
             volt_list.append(item)
+        self.cb_volt.clear()
         self.cb_volt.addItems(volt_list)
-
-        self.cb_copter_frame.addItems(["","Quad","Hexa","Octo"])
-
-        "之后能搜集到基础数据再来更改"
-        propeller_size = ["","2995","3010"]
-        self.cb_prop_type.addItems(propeller_size)
-
-        self.cb_motor_type_update()
 
     @pyqtSlot()
     def on_pb_xrotor_reset_clicked(self):
         """
         Slot documentation goes here.
         """
-        self.le_weight.setText("")
-        self.cb_volt.setCurrentText("")
-        self.cb_copter_frame.setCurrentText("")
-        self.cb_motor_type.setCurrentText("")
-        self.cb_prop_type.setCurrentText("")
-        self.le_power_given.setText("")
+        for i in range(len(self.xrotor_params)):
+            if isinstance(self.xrotor_params[i],QComboBox):
+                self.xrotor_params[i].setCurrentText("")
+            else:
+                self.xrotor_params[i].setText("")
+
+    """
+    电机数据库部分
+    """
+    @pyqtSlot()
+    def on_pb_motor_db_doc_select_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        self.motor_dir = QFileDialog.getExistingDirectory(self, "选择电机测试数据目录", \
+                                                    "",\
+                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+
+        self.label_motor_db_path.setText(self.motor_dir)
+        # files = os.listdir(self.motor_dir)
+        # self.lw_motor_test_files.addItems(files)
+
+    @pyqtSlot()
+    def on_pb_motor_db_file_read_clicked(self):
+        """
+        self.motor_dir如果未定义，则使用默认目录：
+        ...\LightGCS\ext_tools\rotor_db\
+        否则为选定目录
+        左侧窗口显示目录中的.csv文件
+        右侧窗口显示motors.db库中motorList表内容
+        若左侧目录中.csv文件已存在于motorList表中，则只在右侧显示
+        """
+
+        """
+        params = {"table":tablename, "fields":["ID int","name text",...]}
+        """
+        params = {"table":"motorList"}
+        fields = []
+        fields.append("file varchar(50)")
+        params["fields"] = fields
+        create_table(params)
+
+        # 查询表头字段
+        params = {"table":"motorList"}
+        ret = table_head_query(params)
+
+        # 查询表内容
+        """
+        params = {"table":tablename, "fields":["ID","name",...], "conditions":xxx}
+        """
+        params = {"table":"motorList"}
+        params["fields"] = []
+        db_motor_list = db_query(params)
+        motor_list = set()
+        for items in db_motor_list:
+            for item in items:
+                motor_list.add(item)
+
+        # 测试
+        # print self.__dict__
+        # print "motor_dir" in self.__dict__
+
+        if not "motor_dir" in self.__dict__:
+            self.motor_dir = os.path.split(os.path.realpath(__file__))[0] + "\\ext_tools\\rotor_db"
+
+        csv_files = set()
+        files = os.listdir(self.motor_dir)
+        for file in files:
+            if os.path.isfile(os.path.join(self.motor_dir,file)):
+                f = os.path.splitext(file)
+                if f[1] == ".csv":
+                    csv_files.add(f[0])
+        csv_files = csv_files - (csv_files & motor_list)
+
+        self.lw_motor_test_files.clear()
+        self.lw_motor_db_files.clear()
+        self.lw_motor_test_files.addItems(csv_files)
+        self.lw_motor_db_files.addItems(motor_list)
+        self.label_motor_db_path.setText(self.motor_dir)
+
+    @pyqtSlot()
+    def on_pb_motor_db_file_insert_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        pass
+
+    @pyqtSlot()
+    def on_pb_motor_db_file_remove_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        pass
+
+    @pyqtSlot()
+    def on_pb_motor_db_insert_confirm_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        """
+        params = {"table":tablename, "fields":["ID","name",...], "values":[[],[],...]}
+        """
+        fields = ["file"]
+        values = [["TMotorU8KV135.csv"],["TMotorU10KV170.csv"]]
+        params["fields"] = fields
+        params["values"] = values
+        insert_items(params)
 
 if __name__ == "__main__":
     import sys

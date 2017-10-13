@@ -10,6 +10,12 @@
     <height>800</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="mouseTracking">
    <bool>true</bool>
   </property>
@@ -165,7 +171,7 @@
      </sizepolicy>
     </property>
     <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;weight of copter&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string/>
     </property>
     <property name="currentIndex">
      <number>4</number>
@@ -782,7 +788,7 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="text">
-       <string>XROTOR CALC</string>
+       <string>多旋翼机评估</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
@@ -806,7 +812,7 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="xrotor_calc">
        <widget class="QGroupBox" name="xrotor_ecalc">
@@ -814,8 +820,8 @@ p, li { white-space: pre-wrap; }
          <rect>
           <x>10</x>
           <y>0</y>
-          <width>791</width>
-          <height>141</height>
+          <width>801</width>
+          <height>191</height>
          </rect>
         </property>
         <property name="font">
@@ -824,14 +830,14 @@ p, li { white-space: pre-wrap; }
          </font>
         </property>
         <property name="title">
-         <string>INPUT</string>
+         <string>参数</string>
         </property>
         <widget class="QLabel" name="label_4">
          <property name="geometry">
           <rect>
            <x>10</x>
            <y>20</y>
-           <width>91</width>
+           <width>61</width>
            <height>31</height>
           </rect>
          </property>
@@ -841,13 +847,13 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="text">
-          <string>Weight(g)</string>
+          <string>重量</string>
          </property>
         </widget>
         <widget class="QLabel" name="label_5">
          <property name="geometry">
           <rect>
-           <x>300</x>
+           <x>170</x>
            <y>20</y>
            <width>51</width>
            <height>31</height>
@@ -859,13 +865,13 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="text">
-          <string>Frame</string>
+          <string>机型</string>
          </property>
         </widget>
         <widget class="QLabel" name="label_6">
          <property name="geometry">
           <rect>
-           <x>300</x>
+           <x>10</x>
            <y>60</y>
            <width>51</width>
            <height>31</height>
@@ -877,15 +883,15 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="text">
-          <string>Motor</string>
+          <string>电机</string>
          </property>
         </widget>
         <widget class="QLabel" name="label_7">
          <property name="geometry">
           <rect>
-           <x>300</x>
-           <y>100</y>
-           <width>51</width>
+           <x>250</x>
+           <y>60</y>
+           <width>21</width>
            <height>31</height>
           </rect>
          </property>
@@ -895,15 +901,15 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="text">
-          <string>Prop</string>
+          <string>桨</string>
          </property>
         </widget>
         <widget class="QLabel" name="label_8">
          <property name="geometry">
           <rect>
-           <x>10</x>
-           <y>60</y>
-           <width>81</width>
+           <x>250</x>
+           <y>100</y>
+           <width>31</width>
            <height>31</height>
           </rect>
          </property>
@@ -913,7 +919,7 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="text">
-          <string>Power(w)</string>
+          <string>容量</string>
          </property>
         </widget>
         <widget class="QComboBox" name="cb_copter_frame">
@@ -922,9 +928,9 @@ p, li { white-space: pre-wrap; }
          </property>
          <property name="geometry">
           <rect>
-           <x>360</x>
+           <x>210</x>
            <y>20</y>
-           <width>181</width>
+           <width>121</width>
            <height>31</height>
           </rect>
          </property>
@@ -934,7 +940,7 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="toolTip">
-          <string>copter type, such as 4, 6, 8, ...</string>
+          <string>旋翼机类型，如4轴、6轴，...</string>
          </property>
          <property name="editable">
           <bool>false</bool>
@@ -943,9 +949,9 @@ p, li { white-space: pre-wrap; }
         <widget class="QComboBox" name="cb_motor_type">
          <property name="geometry">
           <rect>
-           <x>360</x>
+           <x>50</x>
            <y>60</y>
-           <width>181</width>
+           <width>171</width>
            <height>31</height>
           </rect>
          </property>
@@ -955,7 +961,7 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="toolTip">
-          <string>motor type, such as tmotoru8kv170</string>
+          <string>电机类型</string>
          </property>
          <property name="editable">
           <bool>false</bool>
@@ -964,9 +970,9 @@ p, li { white-space: pre-wrap; }
         <widget class="QComboBox" name="cb_prop_type">
          <property name="geometry">
           <rect>
-           <x>360</x>
-           <y>100</y>
-           <width>181</width>
+           <x>300</x>
+           <y>60</y>
+           <width>121</width>
            <height>31</height>
           </rect>
          </property>
@@ -976,7 +982,7 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="toolTip">
-          <string>propeller size, such as 2995</string>
+          <string>螺旋桨尺寸</string>
          </property>
          <property name="editable">
           <bool>false</bool>
@@ -985,80 +991,8 @@ p, li { white-space: pre-wrap; }
         <widget class="QLineEdit" name="le_weight">
          <property name="geometry">
           <rect>
-           <x>100</x>
+           <x>50</x>
            <y>20</y>
-           <width>131</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="toolTip">
-          <string>weight of copter, must be int</string>
-         </property>
-        </widget>
-        <widget class="QLineEdit" name="le_power_given">
-         <property name="geometry">
-          <rect>
-           <x>100</x>
-           <y>60</y>
-           <width>131</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="toolTip">
-          <string>power given, optional</string>
-         </property>
-        </widget>
-        <widget class="QPushButton" name="pb_xrotor_calc">
-         <property name="geometry">
-          <rect>
-           <x>610</x>
-           <y>80</y>
-           <width>121</width>
-           <height>41</height>
-          </rect>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Calculate</string>
-         </property>
-        </widget>
-        <widget class="QPushButton" name="pb_xrotor_reset">
-         <property name="geometry">
-          <rect>
-           <x>609</x>
-           <y>20</y>
-           <width>121</width>
-           <height>41</height>
-          </rect>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-        <widget class="QLabel" name="label_9">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>100</y>
            <width>81</width>
            <height>31</height>
           </rect>
@@ -1068,16 +1002,19 @@ p, li { white-space: pre-wrap; }
            <pointsize>10</pointsize>
           </font>
          </property>
+         <property name="toolTip">
+          <string>飞机总重</string>
+         </property>
          <property name="text">
-          <string>Volt(V)</string>
+          <string/>
          </property>
         </widget>
-        <widget class="QComboBox" name="cb_volt">
+        <widget class="QLineEdit" name="le_battery_capacity">
          <property name="geometry">
           <rect>
-           <x>100</x>
+           <x>300</x>
            <y>100</y>
-           <width>131</width>
+           <width>121</width>
            <height>31</height>
           </rect>
          </property>
@@ -1087,15 +1024,746 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="toolTip">
-          <string>work voltage</string>
+          <string>电池容量</string>
+         </property>
+         <property name="text">
+          <string>10000</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pb_xrotor_calc">
+         <property name="geometry">
+          <rect>
+           <x>670</x>
+           <y>140</y>
+           <width>121</width>
+           <height>41</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>评估旋翼机性能</string>
+         </property>
+         <property name="text">
+          <string>解析</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pb_xrotor_reset">
+         <property name="geometry">
+          <rect>
+           <x>510</x>
+           <y>140</y>
+           <width>121</width>
+           <height>41</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>清空输入及选型</string>
+         </property>
+         <property name="text">
+          <string>清空</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_9">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>100</y>
+           <width>41</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>电压</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cb_volt">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>100</y>
+           <width>171</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>电机工作电压</string>
          </property>
          <property name="editable">
           <bool>false</bool>
          </property>
         </widget>
+        <widget class="QLabel" name="label_10">
+         <property name="geometry">
+          <rect>
+           <x>430</x>
+           <y>100</y>
+           <width>31</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>mAh</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="le_flight_height">
+         <property name="geometry">
+          <rect>
+           <x>560</x>
+           <y>20</y>
+           <width>61</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>无人机飞行高度，默认100米</string>
+         </property>
+         <property name="text">
+          <string>100</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_11">
+         <property name="geometry">
+          <rect>
+           <x>520</x>
+           <y>20</y>
+           <width>41</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>飞高</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="le_capacity_residual">
+         <property name="geometry">
+          <rect>
+           <x>560</x>
+           <y>100</y>
+           <width>51</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>电池剩余电量, 默认15%</string>
+         </property>
+         <property name="text">
+          <string>15</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_12">
+         <property name="geometry">
+          <rect>
+           <x>480</x>
+           <y>100</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>放电下限</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_13">
+         <property name="geometry">
+          <rect>
+           <x>620</x>
+           <y>100</y>
+           <width>21</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>%</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="le_uav_axisDist">
+         <property name="geometry">
+          <rect>
+           <x>400</x>
+           <y>20</y>
+           <width>71</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>旋翼机轴距</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_14">
+         <property name="geometry">
+          <rect>
+           <x>360</x>
+           <y>20</y>
+           <width>41</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>轴距</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_15">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>20</y>
+           <width>21</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>g</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_16">
+         <property name="geometry">
+          <rect>
+           <x>480</x>
+           <y>20</y>
+           <width>21</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>mm</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_17">
+         <property name="geometry">
+          <rect>
+           <x>630</x>
+           <y>20</y>
+           <width>21</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>m</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_18">
+         <property name="geometry">
+          <rect>
+           <x>760</x>
+           <y>20</y>
+           <width>21</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>℃</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_19">
+         <property name="geometry">
+          <rect>
+           <x>670</x>
+           <y>20</y>
+           <width>41</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>温度</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="le_ground_temperature">
+         <property name="geometry">
+          <rect>
+           <x>710</x>
+           <y>20</y>
+           <width>41</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>地面环境温度</string>
+         </property>
+         <property name="text">
+          <string>25</string>
+         </property>
+        </widget>
        </widget>
       </widget>
       <widget class="QWidget" name="fixedwing_calc"/>
+      <widget class="QWidget" name="tiltrotor_calc"/>
+      <widget class="QWidget" name="rotor_db">
+       <widget class="QTabWidget" name="tw_motor_db">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>831</width>
+          <height>701</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tw_insert_data_bat">
+         <attribute name="title">
+          <string>插入数据</string>
+         </attribute>
+         <widget class="QPushButton" name="pb_motor_db_file_insert">
+          <property name="geometry">
+           <rect>
+            <x>370</x>
+            <y>260</y>
+            <width>93</width>
+            <height>28</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>插入</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pb_motor_db_file_remove">
+          <property name="geometry">
+           <rect>
+            <x>370</x>
+            <y>300</y>
+            <width>93</width>
+            <height>28</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>移除</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pb_motor_db_insert_confirm">
+          <property name="geometry">
+           <rect>
+            <x>370</x>
+            <y>340</y>
+            <width>93</width>
+            <height>28</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>确定</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_25">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>30</y>
+            <width>111</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>待加入文件</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pb_motor_db_file_read">
+          <property name="geometry">
+           <rect>
+            <x>370</x>
+            <y>220</y>
+            <width>93</width>
+            <height>28</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>读取</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_26">
+          <property name="geometry">
+           <rect>
+            <x>620</x>
+            <y>30</y>
+            <width>111</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>已加入文件</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_27">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>610</y>
+            <width>91</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>文件目录</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_motor_db_path">
+          <property name="geometry">
+           <rect>
+            <x>110</x>
+            <y>610</y>
+            <width>711</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pb_motor_db_doc_select">
+          <property name="geometry">
+           <rect>
+            <x>100</x>
+            <y>550</y>
+            <width>151</width>
+            <height>28</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>目录/文件</string>
+          </property>
+         </widget>
+         <widget class="QListWidget" name="lw_motor_test_files">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>60</y>
+            <width>281</width>
+            <height>481</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QListWidget" name="lw_motor_db_files">
+          <property name="geometry">
+           <rect>
+            <x>520</x>
+            <y>60</y>
+            <width>281</width>
+            <height>481</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QWidget" name="tw_data_sql">
+         <attribute name="title">
+          <string>检索数据</string>
+         </attribute>
+         <widget class="QLabel" name="label_20">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>10</y>
+            <width>81</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>电机厂商</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="cb_motor_db_productor">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>111</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="cb_motor_db_type">
+          <property name="geometry">
+           <rect>
+            <x>130</x>
+            <y>40</y>
+            <width>111</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_21">
+          <property name="geometry">
+           <rect>
+            <x>150</x>
+            <y>10</y>
+            <width>81</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>电机型号</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="cb_motor_db_kv">
+          <property name="geometry">
+           <rect>
+            <x>250</x>
+            <y>40</y>
+            <width>111</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_22">
+          <property name="geometry">
+           <rect>
+            <x>280</x>
+            <y>10</y>
+            <width>51</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Kv值</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="cb_motor_db_propeller">
+          <property name="geometry">
+           <rect>
+            <x>370</x>
+            <y>40</y>
+            <width>111</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_23">
+          <property name="geometry">
+           <rect>
+            <x>400</x>
+            <y>10</y>
+            <width>51</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>桨尺寸</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_4">
+          <property name="geometry">
+           <rect>
+            <x>730</x>
+            <y>7</y>
+            <width>93</width>
+            <height>71</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>查询</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="cb_motor_db_volt">
+          <property name="geometry">
+           <rect>
+            <x>490</x>
+            <y>40</y>
+            <width>111</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_24">
+          <property name="geometry">
+           <rect>
+            <x>510</x>
+            <y>10</y>
+            <width>81</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>工作电压</string>
+          </property>
+         </widget>
+         <widget class="QTableView" name="tv_motor_db_data">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>80</y>
+            <width>825</width>
+            <height>591</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+      </widget>
      </widget>
      <widget class="QRadioButton" name="rb_fixedwing_calc">
       <property name="geometry">
@@ -1112,7 +1780,55 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="text">
-       <string>FIXED WING</string>
+       <string>固定翼机评估</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="rb_tiltrotor_calc">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>140</y>
+        <width>161</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>倾旋翼机评估</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="rb_rotor_database">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>161</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>电机数据库</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
