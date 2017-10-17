@@ -23,6 +23,7 @@ from ext_tools.sql_tool import *
 import os
 import time
 import threading
+# import csv
 
 try:
     from PyQt5.QtCore import QString
@@ -747,46 +748,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         params = {"table":"motorList"}
         fields = []
-        fields.append("file varchar(50)")
+        fields.append("Motor varchar(50) PRIMARY KEY NOT NULL")
         params["fields"] = fields
         create_table(params)
 
         # 查询表头字段
         params = {"table":"motorList"}
-        ret = table_head_query(params)
+        ret = head_query(params)
 
         # 查询表内容
         """
         params = {"table":tablename, "fields":["ID","name",...], "conditions":xxx}
         """
         params = {"table":"motorList"}
-        params["fields"] = []
-        db_motor_list = db_query(params)
-        motor_list = set()
+        db_motor_list = table_query(params)
+        self.motor_list = set()
         for items in db_motor_list:
             for item in items:
-                motor_list.add(item)
-
-        # 测试
-        # print self.__dict__
-        # print "motor_dir" in self.__dict__
+                self.motor_list.add(item)
 
         if not "motor_dir" in self.__dict__:
             self.motor_dir = os.path.split(os.path.realpath(__file__))[0] + "\\ext_tools\\rotor_db"
 
-        csv_files = set()
+        self.csv_files = set()
         files = os.listdir(self.motor_dir)
         for file in files:
             if os.path.isfile(os.path.join(self.motor_dir,file)):
                 f = os.path.splitext(file)
                 if f[1] == ".csv":
-                    csv_files.add(f[0])
-        csv_files = csv_files - (csv_files & motor_list)
+                    self.csv_files.add(f[0])
+        self.csv_files_show = self.csv_files - self.motor_list
 
         self.lw_motor_test_files.clear()
         self.lw_motor_db_files.clear()
-        self.lw_motor_test_files.addItems(csv_files)
-        self.lw_motor_db_files.addItems(motor_list)
+        self.lw_motor_test_files.addItems(self.csv_files_show)
+        self.lw_motor_db_files.addItems(self.motor_list)
         self.label_motor_db_path.setText(self.motor_dir)
 
     @pyqtSlot()
@@ -794,28 +790,98 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Slot documentation goes here.
         """
-        pass
+        selItems = self.lw_motor_test_files.selectedItems()
+        itemSet = set()
+        for item in selItems:
+            itemSet.add(item.text())
+
+        self.motor_list |= itemSet
+        self.csv_files_show = self.csv_files - self.motor_list
+
+        self.lw_motor_test_files.clear()
+        self.lw_motor_test_files.addItems(self.csv_files_show)
+
+        self.lw_motor_db_files.clear()
+        self.lw_motor_db_files.addItems(self.motor_list)
+
+        def insert_motorItems(itemSet):
+            import pandas as pd
+            for item in itemSet:
+                csv_file = os.path.join(self.motor_dir,"{}.csv".format(item))
+                with open(csv_file, 'rb') as f:
+                    #lines = csv.reader(f)
+                    lines = pd.read_csv(f)
+                    # 清除含有NAN的列
+                    lines = lines.dropna(axis=1)
+                    # 将long转为int
+                    columns = list(lines.columns)
+                    for column in columns:
+                        if lines[column].dtypes == long:
+                            lines[column] = lines[column].astype("int")
+
+                    params = {"table":"motorData"}
+                    params["fields"] = columns
+                    params["values"] = lines.values
+                    insert_items(params)
+
+                    params = {"table":"motorList"}
+                    params["fields"] = ["Motor"]
+                    params["values"] = [str(item)]
+                    insert_items(params)
+
+                self.label_db_dml_status.setText("添加成功！")
+
+        insert_items_thread = threading.Thread(target=insert_motorItems,args=(itemSet,))
+        insert_items_thread.setDaemon(True)
+        insert_items_thread.start()
 
     @pyqtSlot()
     def on_pb_motor_db_file_remove_clicked(self):
         """
         Slot documentation goes here.
         """
-        pass
+        selItems = self.lw_motor_db_files.selectedItems()
+        itemSet = set()
+        for item in selItems:
+            itemSet.add(item.text())
+
+        self.motor_list -= itemSet
+        self.csv_files_show = self.csv_files - self.motor_list
+
+        self.lw_motor_test_files.clear()
+        self.lw_motor_test_files.addItems(self.csv_files_show)
+
+        self.lw_motor_db_files.clear()
+        self.lw_motor_db_files.addItems(self.motor_list)
+
+        for item in itemSet:
+            params = {}
+            params["condition"] = "Motor = '{}'".format(str(item))
+
+            params["table"] = "motorData"
+            delete_items(params)
+
+            params["table"] = "motorList"
+            delete_items(params)
+
+        self.label_db_dml_status.setText("删除成功！")
 
     @pyqtSlot()
     def on_pb_motor_db_insert_confirm_clicked(self):
         """
-        Slot documentation goes here.
-        """
-        """
         params = {"table":tablename, "fields":["ID","name",...], "values":[[],[],...]}
         """
-        fields = ["file"]
-        values = [["TMotorU8KV135.csv"],["TMotorU10KV170.csv"]]
-        params["fields"] = fields
-        params["values"] = values
-        insert_items(params)
+        drop_table_motorList()
+        drop_table_motorData()
+        drop_table_motorInfo()
+        drop_table_propellerInfo()
+
+        create_table_motorList()
+        create_table_motorData()
+        create_table_motorInfo()
+        create_table_propellerInfo()
+
+        self.label_db_dml_status.setText("清除完成！")
 
 if __name__ == "__main__":
     import sys

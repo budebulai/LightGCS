@@ -115,7 +115,6 @@ def create_table(params):
     """
     table = params["table"]
     fields = ",".join(params["fields"])
-
     return "CREATE TABLE IF NOT EXISTS {}({});".format(table,fields)
 
 @connect(motor_db)
@@ -153,9 +152,22 @@ def insert_items(params):
     if fields:
         fields = "(" + ",".join(fields) + ")"
 
-    values = [str(tuple(item)) for item in values]
-    values = ",".join(values)
+    # for i in range(len(values)):
+    #     print values[i]
+    #     for j in range(len(values[i])):
+    #         if isinstance(values[i][j],str):
+    #             values[i][j] = '"' + values[i][j] + '"'
+        # temp = ",".join(values[i])
+        # values[i] = "({})".format(temp)
+    if len(values) == 1:
+        if isinstance(values[0],str):
+            values[0] = '"' + values[0] + '"'
+        values = "({})".format(values[0])
+    else:
+        values = [str(tuple(item)) for item in values]
+        values = ",".join(values)
 
+    # print "INSERT INTO {} {} VALUES{};".format(table,fields,values)
     return "INSERT INTO {} {} VALUES{};".format(table,fields,values)
 
 @connect(motor_db)
@@ -190,7 +202,7 @@ def delete_items(params):
     condition = params.get("condition","")
     if condition:
         condition = "WHERE " + condition
-
+    # print "DELETE FROM {} {};".format(params["table"],condition)
     return "DELETE FROM {} {};".format(params["table"],condition)
 
 @connect(motor_db)
@@ -211,7 +223,7 @@ def truncate_table(params):
 DQL
 """
 @connect(motor_db)
-def db_query(params):
+def table_query(params):
     """
     params = {"table":tablename, "fields":["ID","name",...], "conditions":xxx}
     """
@@ -227,7 +239,7 @@ def db_query(params):
     if condition:
         condition = "WHERE " + condition
 
-    return "SELECT {} FROM {} {};".format(table, fields, condition)
+    return "SELECT {} FROM {} {};".format(fields, table, condition)
 
 @connect(motor_db)
 def head_query(params):
@@ -237,3 +249,132 @@ def head_query(params):
     """
     # sql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = {};".format(params["table"])
     return "PRAGMA table_info({});".format(params["table"])
+
+"""
+视图
+示例：创建master_view
+CREATE VIEW master_view
+AS
+SELECT id,name FROM student;
+
+SELECT * FROM master_view;
+DESC master_view;
+SHOW CREATE VIEW master_view;
+
+ALTER VIEW master_view
+AS
+SELECT id,name,email FROM student;
+
+UPDATE master_view SET xx=11 WHERE xx=xxx;
+
+DROP VIEW master_view;
+
+"""
+
+"""
+事务
+将一组语句SQL放在同一批次内去执行，如果一个SQL语句出错，则该批次内的所有SQL都将被取消执行
+如银行转帐，中途出现错误，全部回滚
+MySQL事务处理只支持InnoDB和BDB数据表类型
+ACID：
+原子性(atomic)
+一致性(consist)
+隔离性(isolated)
+持久性(durable)
+
+关闭自动提交
+SELECT @@autocommit;
+SET autocommit=0;
+
+MySQL事务控制
+START TRANSACTION;
+语句(组)
+COMMIT;
+ROLLBACK;
+SET autocommit=1;
+
+sqlite3事务控制
+使用下面的命令来控制事务：
+BEGIN TRANSACTION：开始事务处理。
+COMMIT：保存更改，或者可以使用 END TRANSACTION 命令。
+ROLLBACK：回滚所做的更改。
+事务控制命令只与 DML 命令 INSERT、UPDATE 和 DELETE 一起使用。他们不能在创建表或删除表时使用，因为这些操作在数据库中是自动提交的。
+"""
+
+"""
+触发器
+四要素：
+1、监视地点table
+2、监视事件insert/update/delete
+3、触发时间after/before
+4、触发事件insert/update/delete
+
+CREATE TRIGGER triggerName
+{BEFORE | AFTER}
+{INSERT | UPDATE | DELETE}
+ON tablename
+FOR EACH ROW
+BEGIN
+    触发器SQL语句;
+END;
+
+DROP TRIGGER triggerName;
+"""
+
+
+def create_table_motorList():
+    params = {"table":"motorList"}
+    params["fields"] = ["Motor varchar(50) PRIMARY KEY NOT NULL"]
+    create_table(params)
+
+def drop_table_motorList():
+    params = {"table":"motorList"}
+    drop_table(params)
+
+
+def create_table_motorData():
+    params = {"table":"motorData"}
+    params["fields"] = ["Motor VARCHAR(50)",\
+                        "Voltage FLOAT(5,2)",\
+                        "Propeller INT(6)",\
+                        "Throttle VARCHAR(4)",\
+                        "Amps FLOAT(5,2)",\
+                        "Watts INT(6)",\
+                        "Thrust FLOAT(8,2)",\
+                        "RPM INT(5)",\
+                        "Efficiency FLOAT(5,2)"]
+    create_table(params)
+
+def drop_table_motorData():
+    params = {"table":"motorData"}
+    drop_table(params)
+
+def create_table_motorInfo():
+    params = {"table":"motorInfo"}
+    params["fields"] = ["Motor VARCHAR(50) PRIMARY KEY NOT NULL",\
+                        "Producer VARCHAR(50)",\
+                        "Type VARCHAR(50)",\
+                        "KV VARCHAR(10)",\
+                        "Voltage FLOAT(5,2)",\
+                        "Amps FLOAT(5,2)",\
+                        "Watts INT(6)",\
+                        "Resistor FLOAT(4,2)",\
+                        "AmpNoLoad FLOAT(4,2)"]
+    create_table(params)
+
+def drop_table_motorInfo():
+    params = {"table":"motorInfo"}
+    drop_table(params)
+
+def create_table_propellerInfo():
+    params = {"table":"propellerInfo"}
+    params["fields"] = ["Producer VARCHAR(50)",\
+                        "Propeller INT(6)",\
+                        "Type VARCHAR(50)",\
+                        "cT FLOAT(6,2)",\
+                        "cM FLOAT(6,2)"]
+    create_table(params)
+
+def drop_table_propellerInfo():
+    params = {"table":"propellerInfo"}
+    drop_table(params)
