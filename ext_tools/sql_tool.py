@@ -3,6 +3,7 @@
 import os
 import sqlite3
 from functools import wraps
+import copy
 
 """
 待优化：
@@ -147,10 +148,7 @@ def insert_items(params):
     """
     table = params["table"]
     fields = params.get("fields","")
-    values = params["values"]
-
-    if fields:
-        fields = "(" + ",".join(fields) + ")"
+    values = copy.deepcopy(params["values"])
 
     # for i in range(len(values)):
     #     print values[i]
@@ -159,13 +157,25 @@ def insert_items(params):
     #             values[i][j] = '"' + values[i][j] + '"'
         # temp = ",".join(values[i])
         # values[i] = "({})".format(temp)
-    if len(values) == 1:
-        if isinstance(values[0],str):
-            values[0] = '"' + values[0] + '"'
-        values = "({})".format(values[0])
+    if len(fields) == 1:
+        if len(values) == 1:
+            if isinstance(values[0],str):
+                values[0] = '"' + values[0] + '"'
+            values = "({})".format(values[0])
+        else:
+            values = [value for item in values for value in item]
+            for i in range(len(values)):
+                if isinstance(values[i],str):
+                    values[0] = '"' + values[0] + '"'
+                values[i] = "({})".format(values[i])
+            values = ",".join(values)
+
     else:
         values = [str(tuple(item)) for item in values]
         values = ",".join(values)
+
+    if fields:
+        fields = "(" + ",".join(fields) + ")"
 
     # print "INSERT INTO {} {} VALUES{};".format(table,fields,values)
     return "INSERT INTO {} {} VALUES{};".format(table,fields,values)
@@ -222,6 +232,10 @@ def truncate_table(params):
 """
 DQL
 """
+@connect(motor_db)
+def show_tables():
+    return "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+
 @connect(motor_db)
 def table_query(params):
     """

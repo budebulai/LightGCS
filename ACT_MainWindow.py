@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QApplication, \
                             QTabWidget,\
                             QListWidgetItem
 from PyQt5.QtGui import QStandardItemModel,QStandardItem
+from PyQt5.QtSql import QSqlTableModel,QSqlDatabase
 from Ui_MainWindow import Ui_MainWindow
 from pymavlink import mavutil
 from dronekit import connect
@@ -121,6 +122,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.combobox_port_init()
         self.combobox_baudrate_init()
 
+        self.motor_db_combobox_init()
+
 
     def find_ports(self):
         self.preferred_list=['*FTDI*',"*Arduino_Mega_2560*", "*3D_Robotics*", "*USB to UART*", '*PX4*', '*FMU*']
@@ -172,6 +175,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if e.type() == QEvent.MouseButtonPress:
                 self.cb_motor_type_update()
                 return False
+
+        if obj in self.motorCbs:
+            if e.type() == QEvent.MouseButtonPress:
+                self.motor_data_combobox_update(obj)
+                return False
+
 
         return False
 
@@ -603,10 +612,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.stw_exts_sub.setCurrentIndex(0)
         self.xrotor_params_init()
 
-
     def ext_btns_update(self, button):
         id = self.ext_btns.checkedId()
         self.stw_exts_sub.setCurrentIndex(id)
+
+        if id == 1 and not "fixed_wing_initialised" in self.__dict__:
+            self.fixed_wing_params_init()
+        elif id == 2 and not "tilt_rotor_initialised" in self.__dict__:
+            self.tilt_rotor_params_init()
+        elif id == 3 and not "motor_db_initialised" in self.__dict__:
+            self.motor_db_init()
+        else:
+            pass
 
     def xrotor_estimate(self, params):
         from ext_tools import xrotor_estimator
@@ -717,8 +734,118 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.xrotor_params[i].setText("")
 
     """
+    固定翼机评估部分
+    """
+    def fixed_wing_params_init(self):
+        self.fixed_wing_initialised = True
+        pass
+
+    """
+    倾旋翼机评估部分
+    """
+    def tilt_rotor_params_init(self):
+        self.tilt_rotor_initialised = True
+        pass
+
+    """
     电机数据库部分
     """
+    def motor_db_combobox_init(self):
+        self.motorCbs = (self.cb_motor_db_productor,\
+                    self.cb_motor_db_type,\
+                    self.cb_motor_db_kv,\
+                    self.cb_motor_db_propeller,\
+                    self.cb_motor_db_volt)
+
+        for item in self.motorCbs:
+            item.installEventFilter(self)
+
+        self.motorCbKeys = ("Producer","Type","KV","Propeller","Voltage")
+
+        self.motorCbValues = [str(cb.currentText()) for cb in self.motorCbs]
+
+    def motor_db_init(self):
+        tables = [item for items in show_tables() for item in items]
+        self.cb_motor_tables.clear()
+        self.cb_motor_tables.addItems(tables)
+        self.cb_motor_tables.setCurrentIndex(0)
+
+        self.motor_table_view_model = self.create_sql_table_model()
+        self.motor_table_view_init(self.tv_motor_tables)
+        self.motor_table_view_init(self.tv_motor_data)
+        self.motor_db_initialised = True
+
+    def motor_data_combobox_update(self,obj):
+        """
+        self.motorCbs = (self.cb_motor_db_productor,\
+                    self.cb_motor_db_type,\
+                    self.cb_motor_db_kv,\
+                    self.cb_motor_db_propeller,\
+                    self.cb_motor_db_volt)
+        self.motorCbKeys = ("Producer","Type","KV","Propeller","Voltage")
+
+        self.motorCbValues = [str(cb.currentText()) for cb in self.motorCbs]
+        """
+        motorInfoCondition = []
+        motorDataCondition = []
+        idx = self.motorCbs.index(obj)
+        for i in range(len(self.motorCbs)):
+            if not self.motorCbValues[i]:
+                continue
+            if i > 2:
+                motorDataCondition.append("{}={}".format(self.motorCbKeys[i],self.motorCbValues[i]))
+            else:
+                motorInfoCondition.append("{}='{}'".format(self.motorCbKeys[i],self.motorCbValues[i]))
+
+        params = {"table":"motorInfo"}
+        params["fields"] = ["Motor","Producer","Type","KV"]
+        params["condition"] = " AND ".join(motorInfoCondition)
+        values = table_query(params)
+        motors = set([str(item[0]) for item in values if item[0]])
+
+        if idx >= 3: # Propeller ---> motorData
+            params = {"table":"motorData"}
+            params["fields"] = ["Motor","Propeller","Voltage"]
+            if len(motors) == 1:
+                motorDataCondition.append("Motor = '{}'".format(list(motors)[0]))
+            else:
+                motorDataCondition.append("Motor IN {}".format(tuple(motors)))
+            params["condition"] = " AND ".join(motorDataCondition)
+
+            values = table_query(params)
+            items = set([str(item[idx-2]) for item in values if item[idx-2]])
+        else:
+            items = set([str(item[idx+1]) for item in values if item[idx+1]])
+
+        obj.clear()
+        obj.addItem("")
+        obj.addItems(items)
+
+    def create_sql_table_model(self):
+        db_file = os.path.split(os.path.realpath(__file__))[0] + "\\ext_tools\\rotor_db\\motors.db"
+        db = QSqlDatabase.addDatabase("QSQLITE", "motorDB")
+        db.setDatabaseName(db_file)
+        db.open()
+
+        model = QSqlTableModel(self.tv_motor_tables,db)
+        model.setEditStrategy(QSqlTableModel.OnManualSubmit)
+        return model
+
+    def motor_table_view_init(self,table_view):
+        #设置行背景交替色
+        table_view.setAlternatingRowColors(True);
+        table_view.setStyleSheet("{background-color: rgb(255, 255, 255);" "alternate-background-color: rgb(225, 225, 225);}");
+        #隐藏侧边序号
+        table_view.verticalHeader().setHidden(True)
+        table_view.setModel(self.motor_table_view_model)
+
+        #下面代码让表格100填满窗口
+        # table_view.horizontalHeader().setStretchLastSection(True)
+        # table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        #表头信息显示居左
+        # table_view.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
+
     @pyqtSlot()
     def on_pb_motor_db_doc_select_clicked(self):
         """
@@ -729,8 +856,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
         self.label_motor_db_path.setText(self.motor_dir)
-        # files = os.listdir(self.motor_dir)
-        # self.lw_motor_test_files.addItems(files)
 
     @pyqtSlot()
     def on_pb_motor_db_file_read_clicked(self):
@@ -742,19 +867,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         右侧窗口显示motors.db库中motorList表内容
         若左侧目录中.csv文件已存在于motorList表中，则只在右侧显示
         """
-
-        """
-        params = {"table":tablename, "fields":["ID int","name text",...]}
-        """
-        params = {"table":"motorList"}
-        fields = []
-        fields.append("Motor varchar(50) PRIMARY KEY NOT NULL")
-        params["fields"] = fields
-        create_table(params)
-
-        # 查询表头字段
-        params = {"table":"motorList"}
-        ret = head_query(params)
 
         # 查询表内容
         """
@@ -824,12 +936,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     params["values"] = lines.values
                     insert_items(params)
 
-                    params = {"table":"motorList"}
+                    params = {}
                     params["fields"] = ["Motor"]
                     params["values"] = [str(item)]
+
+                    params["table"] = "motorList"
                     insert_items(params)
 
-                self.label_db_dml_status.setText("添加成功！")
+                    params["table"] = "motorInfo"
+                    insert_items(params)
+
+            params = {}
+            params["fields"] = ["Propeller"]
+
+            params["table"] = "motorData"
+            params["values"] = set(table_query(params))
+
+            params["table"] = "propellerInfo"
+            insert_items(params)
+
+            self.label_db_dml_status.setText("添加成功！")
 
         insert_items_thread = threading.Thread(target=insert_motorItems,args=(itemSet,))
         insert_items_thread.setDaemon(True)
@@ -864,6 +990,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             params["table"] = "motorList"
             delete_items(params)
 
+            params["table"] = "motorInfo"
+            delete_items(params)
+
         self.label_db_dml_status.setText("删除成功！")
 
     @pyqtSlot()
@@ -882,6 +1011,87 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         create_table_propellerInfo()
 
         self.label_db_dml_status.setText("清除完成！")
+
+    @pyqtSlot(QString)
+    def on_cb_motor_db_productor_currentTextChanged(self, p0):
+        self.motorCbValues[0] = p0
+
+    @pyqtSlot(QString)
+    def on_cb_motor_db_type_currentTextChanged(self, p0):
+        self.motorCbValues[1] = p0
+
+    @pyqtSlot(QString)
+    def on_cb_motor_db_kv_currentTextChanged(self, p0):
+        self.motorCbValues[2] = p0
+
+    @pyqtSlot(QString)
+    def on_cb_motor_db_propeller_currentTextChanged(self, p0):
+        self.motorCbValues[3] = p0
+
+    @pyqtSlot(QString)
+    def on_cb_motor_db_volt_currentTextChanged(self, p0):
+        self.motorCbValues[4] = p0
+
+    @pyqtSlot()
+    def on_pb_motor_data_sql_clicked(self):
+        motorInfoCondition = []
+        motorDataCondition = []
+        for i in range(len(self.motorCbs)):
+            if not self.motorCbValues[i]:
+                continue
+            if i > 2:
+                motorDataCondition.append("{}={}".format(self.motorCbKeys[i],self.motorCbValues[i]))
+            else:
+                motorInfoCondition.append("{}='{}'".format(self.motorCbKeys[i],self.motorCbValues[i]))
+
+        params = {"table":"motorInfo"}
+        params["fields"] = ["Motor"]
+        params["condition"] = " AND ".join(motorInfoCondition)
+        values = table_query(params)
+
+        motors = set([str(item[0]) for item in values if item[0]])
+        if len(motors) == 1:
+            motorDataCondition.append("Motor = '{}'".format(list(motors)[0]))
+        else:
+            motorDataCondition.append("Motor IN {}".format(tuple(motors)))
+
+        params = {"table":"motorData"}
+        params["condition"] = " AND ".join(motorDataCondition)
+
+        self.motor_table_show(params)
+
+    @pyqtSlot()
+    def on_pb_motor_table_show_clicked(self):
+        tableName = {"table":self.cb_motor_tables.currentText()}
+        self.motor_table_show(tableName)
+
+    def motor_table_show(self,params):
+        """
+        params = {"table":tableName, "condition":"xxx"}
+        """
+        tableName = params["table"]
+        condition = params.get("condition","")
+        self.motor_table_view_model.setTable(tableName)
+        self.motor_table_view_model.setFilter(condition)
+        self.motor_table_view_model.select()
+
+    @pyqtSlot()
+    def on_pb_motor_db_update_clicked(self):
+        self.motor_table_view_model.database().transaction() #开始事务操作
+        if self.motor_table_view_model.submitAll():
+           self.motor_table_view_model.database().commit() #提交
+        else:
+           self.motor_table_view_model.database().rollback() #回滚
+           QMessageBox.warning(self, "tableModel",\
+                                     "数据库错误: {}".format(self.motor_table_view_model.lastError().text()))
+
+    @pyqtSlot()
+    def on_pb_motor_db_insert_row_clicked(self):
+        pass
+
+    @pyqtSlot()
+    def on_pb_motor_db_delete_row_clicked(self):
+        pass
 
 if __name__ == "__main__":
     import sys
