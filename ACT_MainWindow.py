@@ -11,9 +11,8 @@ from PyQt5.QtWidgets import QApplication, \
                             QHeaderView, \
                             QMessageBox,\
                             QButtonGroup, \
-                            QComboBox, \
-                            QTabWidget,\
-                            QListWidgetItem
+                            QComboBox
+
 from PyQt5.QtGui import QStandardItemModel,QStandardItem
 from PyQt5.QtSql import QSqlTableModel,QSqlDatabase
 from Ui_MainWindow import Ui_MainWindow
@@ -169,11 +168,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if obj == self.cb_comm_name:
             if e.type() == QEvent.MouseButtonPress:
                 self.combobox_port_update()
-                return False
-
-        if obj == self.cb_motor_type:
-            if e.type() == QEvent.MouseButtonPress:
-                self.cb_motor_type_update()
                 return False
 
         if obj in self.motorCbs:
@@ -592,7 +586,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.fw_progressbar.setValue(percent)
 
     def exts_window_init(self):
-        self.cb_motor_type.installEventFilter(self)
         self.ext_btns_init()
 
     def ext_btns_init(self):
@@ -600,7 +593,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ext_btns.setExclusive(True)
 
         # 附加功能选项按顺序添加到此列表
-        ext_btns_list = [self.rb_xrotor_calc,self.rb_fixedwing_calc,self.rb_tiltrotor_calc,self.rb_rotor_database]
+        ext_btns_list = [self.rb_xrotor_calc,self.rb_fixedwing_calc,self.rb_tiltrotor_calc,self.rb_rotor_database,self.rb_foc_esc]
 
         for i in range(len(ext_btns_list)):
             self.ext_btns.addButton(ext_btns_list[i])
@@ -622,13 +615,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tilt_rotor_params_init()
         elif id == 3 and not "motor_db_initialised" in self.__dict__:
             self.motor_db_init()
+        elif id == 4 and not "foc_esc_initialised" in self.__dict__:
+
+            pass
         else:
             pass
 
     def xrotor_estimate(self, params):
         from ext_tools import xrotor_estimator
-        path = os.path.split(os.path.realpath(__file__))[0] + "/ext_tools/rotor_db"
-        xrotor_estimator.xrotor_estimate(path, params)
+        xrotor_estimator.xrotor_estimate(params)
 
     @pyqtSlot()
     def on_pb_xrotor_calc_clicked(self):
@@ -666,6 +661,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def check_xrotor_params(self, params):
         if not (params["weight"] and params["frame"] and params["motor"] and params["propeller"]):
+            print "saf"
             return False
         try:
             "convert string weight to int"
@@ -676,7 +672,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if isinstance(self.xrotor_params[i],QComboBox):
                     continue
                 if params[self.xrotor_params_key[i]]:
-                    params[self.xrotor_params_key[i]] = int(params[self.xrotor_params_key[i]])
+                    params[self.xrotor_params_key[i]] = float(params[self.xrotor_params_key[i]])
                     if self.xrotor_params_key[i] == "temperature":
                         continue
                     assert params[self.xrotor_params_key[i]] > 0
@@ -685,35 +681,53 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         return True
 
-    def cb_motor_type_update(self):
-        path = os.path.split(os.path.realpath(__file__))[0] + "\\ext_tools\\rotor_db"
-        files = os.listdir(path)
-        motor_list = [""]
-        for f in files:
-            f = os.path.splitext(f)
-            if f[1] == ".csv":
-                motor_list.append(f[0])
-        self.cb_motor_type.clear()
-        self.cb_motor_type.addItems(motor_list)
-
     def xrotor_params_init(self):
         """
         Init xrotor groupbox all QCombobox
         """
-        self.xrotor_params = [self.le_weight,self.cb_copter_frame,self.le_uav_axisDist,self.le_flight_height,self.le_ground_temperature,\
-                            self.cb_motor_type,self.cb_prop_type,\
-                            self.cb_volt,self.le_battery_capacity,self.le_capacity_residual]
-        self.xrotor_params_key = ["weight","frame","axisDist","height","temperature","motor","propeller","voltage","capacity","residual"]
+        # db table init
+        create_table_motorList()
+        create_table_motorData()
+        create_table_motorInfo()
+        create_table_propellerInfo()
+
+        self.xrotor_params = [self.le_weight,\
+                              self.cb_copter_frame,\
+                              self.le_uav_axisDist,\
+                              self.le_flight_height,\
+                              self.le_ground_temperature,\
+                              self.cb_motor_type,\
+                              self.cb_prop_type,\
+                              self.cb_volt,\
+                              self.le_battery_capacity,\
+                              self.le_capacity_residual]
+        self.xrotor_params_key = ["weight",\
+                                  "frame",\
+                                  "axisDist",\
+                                  "height",\
+                                  "temperature",\
+                                  "motor",\
+                                  "propeller",\
+                                  "voltage",\
+                                  "capacity",\
+                                  "residual"]
 
         self.cb_copter_frame.clear()
         self.cb_copter_frame.addItems(["","Quad","Hexa","Octo"])
 
-        #"之后能搜集到基础数据再来更改"
-        propeller_size = ["","2685","2788","2892","2995","3010"]
-        self.cb_prop_type.clear()
-        self.cb_prop_type.addItems(propeller_size)
+        params = {"table":"motorData"}
+        params["fields"] = ["Motor","Propeller"]
+        ret = table_query(params)
 
-        self.cb_motor_type_update()
+        motors = set([item[0] for item in ret if item[0]])
+        propellers = set([str(item[1]) for item in ret if item[1]])
+
+        self.cb_motor_type.clear()
+        self.cb_motor_type.addItem("")
+        self.cb_motor_type.addItems(motors)
+        self.cb_prop_type.clear()
+        self.cb_prop_type.addItem("")
+        self.cb_prop_type.addItems(propellers)
 
         volt_list = [""]
         for i in range(2,13):
@@ -994,6 +1008,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             delete_items(params)
 
         self.label_db_dml_status.setText("删除成功！")
+
+    @pyqtSlot()
+    def on_pb_csv_template_clicked(self):
+        """
+        save a motor test file template, csv file
+        """
+        if not "motor_dir" in self.__dict__:
+            self.motor_dir = os.path.split(os.path.realpath(__file__))[0] + "\\ext_tools\\rotor_db"
+        file = QFileDialog.getSaveFileName(self, "电机测试数据CSV模板", \
+                                                    self.motor_dir,\
+                                                    "CSV File (*.csv)")
+
+        if file:
+            """
+            print file
+            (u'E:/DATAANALYSE/PYTHON/PYQT/LightGCS/ext_tools/rotor_db/adfasfs.csv', u'CSV File (*.csv)')
+            """
+            import csv
+            with open(file[0],'wb') as f:
+                fileName = os.path.split(file[0])[1]
+                fileName = os.path.splitext(fileName)[0]
+                fields = ["Motor",\
+                          "Voltage",\
+                          "Propeller",\
+                          "Throttle",\
+                          "Amps",\
+                          "Watts",\
+                          "Thrust",\
+                          "RPM",\
+                          "Moment",\
+                          "Efficiency"]
+                writer = csv.DictWriter(f,fieldnames=fields)
+                writer.writeheader()
+                """
+                T-motor lite版电机参数表
+                """
+                for i in range(40,71,2):
+                    writer.writerow({"Motor":fileName,"Voltage":48,"Throttle":"{}%".format(i)})
+                writer.writerow({"Motor":fileName,"Voltage":48,"Throttle":"75%"})
+                for i in range(80,101,10):
+                    writer.writerow({"Motor":fileName,"Voltage":48,"Throttle":"{}%".format(i)})
 
     @pyqtSlot()
     def on_pb_motor_db_insert_confirm_clicked(self):

@@ -4,8 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import statsmodels.formula.api as smf
-
+import sqlite3
 
 """
 旋翼机评估：
@@ -24,97 +23,83 @@ http://www.modouwo.com/AMoDouWo/QC.html#result
 
 """
 
+def rpm_to_rad(rpm):
+    """
+    rpm --> rad/s : 2 * pi * rpm / 60
+    """
+    return 2 * np.pi * rpm / 60.0
+
+def rad_to_rpm(radps):
+    """
+    rad/s --> rpm : rad * 30 / pi
+    """
+    return radps * 30.0 / np.pi
+
 class xrotor(object):
+    """
 
-    def __init__(self,motor,power=0,weight=0,frame=4):
+    """
+
+    def __init__(self,params,rotor,deg = 5.0):
         """
-        初始化，获取motor()实例
-        给定功率，给定无人机重量，旋翼机体类型
+        params: xrotor params, dict type
+        rotor: handler of class rotorModel instance
+        deg: angle between rotor center line and uav perpendicular line
         """
-        self._motor = motor
-        self.UAV_WEIGHT = weight
-        self.POWER_GIVEN = power
-        self.FRAME = frame
+        self.rotor = rotor
+        self.params = params
         # 机臂上反5度
-        self.SCALER = np.cos(np.deg2rad(5))
+        self.scaler = np.cos(np.deg2rad(deg))
 
-    def uav_data_check(self):
+    def xrotor_check(self):
         """
-        数据检查
+        - 重量检查
+        - 桨径计算
+        。。。
         """
         pass
 
-    def uav_weight_calc(self):
+    def propeller_check(self, gap = 15.0):
+        """
+        Given copter diagonal motor axises's distance and vehicle frame,
+        calculating the max size propeller that vehicle can use.
+        And check if the given propeller size is suitable.
+        dist: distance between two diagonal motor axises in millimeter
+        frame: 4,6,8.  vehicle with numbers of axises
+        gap: distance between two propellers' tip
+        """
+        dist = self.params["axisDist"]
+        frame = self.params["frame"]
+
+        if frame == 4:
+            size = (dist / math.sqrt(2)) - gap
+        elif frame == 6:
+            size = (dist / 2.0) - gap
+        elif frame == 8:
+            size = (dist * np.sin(np.deg2rad(22.5))) - gap
+        self.propeller_size = int(size / 25.4) # millimeter converted to inch
+
+        if self.params["propeller"] > self.propeller_size:
+            pass
+
+    def weight_check(self):
         """
         给定各部件重量，计算无人机总重量
         """
         pass
 
-    def uav_propeller_size(self):
-        """
-        计算螺旋桨尺寸
-        """
-        pass
-
-    def uav_rotor_data(self):
-        """
-        单个旋翼拉力
-        单个旋翼功率
-        单个旋翼效率
-        """
-        if self.UAV_WEIGHT:
-            # 机臂水平，无上反角，旋翼所需提供拉力
-            self.thrust_rotor = self.UAV_WEIGHT / self.FRAME
-            # 机臂上反5度，旋翼所需提供拉力增加
-            self.thrust_rotor_ita = self.thrust_rotor / self.SCALER
-
-            # 拉力-->功率 多项式
-            power_polynome = np.poly1d(self._motor.factors["thrust-power"])
-
-            # 无上反角旋翼功率
-            self.power_rotor = power_polynome(self.thrust_rotor)
-            # 上反5度 旋翼功率
-            self.power_rotor_ita = power_polynome(self.thrust_rotor_ita)
-
-            # 功率-->效率 多项式
-            efficiency_polynome = np.poly1d(self._motor.factors["power-efficiency"])
-
-            # 无上反角，旋翼效率
-            self.efficiency_rotor = efficiency_polynome(self.power_rotor)
-            # 上反5度, 旋翼效率
-            self.efficiency_rotor_ita = efficiency_polynome(self.power_rotor_ita)
-
-    def uav_min_power(self):
+    def get_power(self):
         """
         给定无人机重量，求解最小所需功率
         """
-        self.uav_rotor_data()
-        if self.power_rotor:
-            # 无上反角
-            self.MIN_POWER = self.power_rotor * self.FRAME
-            # 上反5度
-            self.MIN_POWER_ITA = self.power_rotor_ita * self.FRAME
+        pass
 
 
     def uav_max_weight(self):
         """
         给定无人机功率，求得最大起飞重量
         """
-        if self.POWER_GIVEN:
-            # 机臂无上反角
-            power_rotor = self.POWER_GIVEN / self.FRAME
-
-            thrust_polynome = np.poly1d(self._motor.factors["power-thrust"])
-            thrust_rotor = thrust_polynome(power_rotor)
-
-            self.MAX_WEIGHT = thrust_rotor * self.FRAME
-
-            # 机臂上反5度，旋翼的垂向拉力减小
-            thrust_rotor_ita = thrust_rotor * self.SCALER
-            self.MAX_WEIGHT_ITA = thrust_rotor_ita * self.FRAME
-        else:
-            self.MAX_WEIGHT_ITA = 0
-
+        pass
 
     def uav_min_diagonal_distance(self):
         """
@@ -277,18 +262,15 @@ class motor(object):
         plt.show()
 
 '''
-给定电池数据，结合飞机数据，估算飞行时间
+给定电池电压及容量，估算重量、电量，后期给出电池放电平台曲线
 '''
 class batterty():
+    def __init__(self,volt, capacity=10000):
+        """
+        volt: working voltage, such as 22.2, 44.4, etc.
+        capacity: LiPo capacity, deault 10000 mAh
+        """
 
-
-    def __init__(self,xrotor,batt,num):
-        self._xrotor = xrotor
-        self.ACE_6S = {22000:488}
-        self.capacity = batt
-        self.ENERGY_PCT = 0.9
-        self.energy = self.ACE_6S[batt]
-        self.batt_num = num
 
     def time_calc(self):
         self.time = self.energy * self.ENERGY_PCT * self.batt_num / self._xrotor.MIN_POWER_ITA * 60
@@ -309,13 +291,13 @@ class airDensity():
     密度 rho = 273.15*P/(101325 * (273.15 + T))*rho_b
     空气密度基数 rho_b = 1.293 kg/m^3，（0摄氏度，1标准大气压时101325帕）
     """
-    def __init__(self, height=100):
+    def __init__(self, height=100.0, groundTemperature=25.0):
         """
         height： 海拔，m
         """
         self.height = height
         self.air_density_base = 1.293
-        self.temp = self.temperature()
+        self.temp = self.temperature(groundTemperature)
 
     def pressure(self):
         return 101325.0 * ((1 - 0.0065 * self.height / (273.15 + self.temp)) ** 5.2561)
@@ -323,14 +305,15 @@ class airDensity():
     def density(self):
         return 273.15 * self.pressure() / (101325.0 * (273.15 + self.temp)) * self.air_density_base
 
-    def temperature(self):
+    def temperature(self, groundTemperature):
         """
         在国际标准中，设海平面处温度为15摄氏度，10000米高空温度为-50摄氏度
         垂直区间温度变化均匀，空气密度与温度成反比
         T = 273.15 + t_down - (t_down - t_up) / 10000 * H
+        这里使用默认近地温度25度
         """
         temperature_up = 50.0
-        temperature_down = 15.0
+        temperature_down = groundTemperature
         return temperature_down - (temperature_down + temperature_up) / 10000.0 * self.height
 
 class rotorModel():
@@ -444,7 +427,31 @@ class rotorModel():
             Cb : 电池容量，mAh
             Cmin : 电池放电剩余容量，mAh
 
-    六、性能参数
+    六、桨转动一圈前进的距离
+    http://www.wulong9.com/jiaocheng/20160901631.html
+    螺旋桨规格定义：直径(D) x 螺距(Pitch)
+    Pitch：螺距，桨转动一周前进的距离
+    R：桨半径
+    U：3/4*R处的平均叶片角度
+    转动一圈前进的距离Pitch = 3/4 * R * tan(U)
+    - 3/4半径处圆周长
+        L = 2 * pi * (D/2*3/4) = pi * D * 3 / 4 (inch)
+    - 桨叶平均角度
+        U = atan(Pitch/L) (deg)
+    如22x10桨，平均叶片角度是多少呢？
+        L = 3.1415926 * 22 * 3 / 4 = 51.83627878423158 inch
+        U = atan(10/L) = 10.919083051507858 deg
+        `
+        import numpy as np
+        L = np.pi * 22 * 3 / 4
+        U = np.arctan2(10,L)
+        `
+    如果要进行变距操作，可根据螺旋桨前进的速度来改变螺距角
+
+    关于螺旋桨的另一点，
+    攻角：桨前进方向与翼弦中心线之间的夹角，一般稍低于叶片角度2~5度（视翼型）
+
+    七、性能参数
         悬停时间
         油门百分比
         最大载重
@@ -453,46 +460,136 @@ class rotorModel():
         最大飞行距离
         综合飞行时间
         抗风等级
+
     """
-    def __init__(self, database, params):
+    def __init__(self, data, params):
         """
         检索电机测试数据库，查询相应尺寸桨测试数据，计算拉力、扭矩系数
-        
+
+        """
+        self.data = data
+        self.params = params
+
+    def data_cleaning(self):
+        """
+        桨数据分组，并剔除数据不全的行
         """
         pass
 
-class rotorReal():
-    """
-    读取电机测试数据，计算拉力-功率关系系数
-    """
-    def __init__(self, data, params):
+    def rotor_factors(self):
+        """
+        根据拉力数据计算拉力、扭矩因子
+        """
         pass
+
+    
+
+
 
 class report_output():
     """
     生成markdown文件，并用浏览器打开
+    或
+    生成doc： python-docx
+    https://github.com/trentm/python-markdown2
+
+    http://www.cnblogs.com/rencm/p/6285304.html
+    http://blog.csdn.net/mlgglm/article/details/51463588
+
+    http://www.bagualu.net/wordpress/archives/5304
+
+    http://john88wang.blog.51cto.com/2165294/1424968
     """
     pass
 
 def parameter_convert(params):
-    #["weight","frame","axisDist","height","temperature","motor","propeller","voltage","capacity","residual"]
+    """
+    params = {"KEYS":"VALUES"}
+    KEYS = ["weight","frame","axisDist","height","temperature","motor","propeller","voltage","capacity","residual"]
+    无人机重量、机型、电机、桨必不可少，其它数据为可选。
+    "weight"值已在界面处转换为整形数值
+    "frame"机型不指定时，默认为4轴
+    "axisDist"轴距可不填。有值时评估桨、电机是否合适。
+    "motor/propeller"电机、桨指定型号，从数据库查询数据
+    "temperature"为近地温度，默认25摄氏度
+    "height"无人机飞行高度，默认100m
+    "voltage"无人机动力系统工作电压
+    "capacity"无人机能源容量，mAh
+    "residual"无人机能量剩余百分比乘以100，可预处理,除以100
+    """
+    for key, value in params.items():
+        if not value:
+            del params[key]
+
+    # 默认值填充
+    # 机型，其它异型不考虑
     uav_frame = {"Quad":4,"Hexa":6,"Octo":8}
     params["frame"] = uav_frame.get(params["frame"],4)
 
-    if params["voltage"]:
-        volt = float(params["voltage"].split("--")[1].rstrip('V'))
-        # print volt
-        params["voltage"] = volt
+    # 轴距
+    params["axisDist"] = float(params.get("axisDist",0))
 
-def xrotor_estimate(path,params):
-    fName = params.get("motor","")+".csv"
-    fPath = os.path.join(path,fName)
-    if not os.path.exists(fPath):
-        return False
+    params["voltage"] = params.get("voltage","")
+    if params["voltage"]:
+        params["voltage"] = float(params["voltage"].split("--")[1].rstrip('V'))
+
+    # 飞行高度
+    params["height"] = float(params.get("height",100.0))
+
+    # 近地温度
+    params["temperature"] = float(params.get("temperature",25.0))
+
+    # 电量
+    params["capacity"] = float(params.get("capacity",10000.0))
+
+    # 放电剩余百分比
+    params["residual"] = float(params.get("residual",15.0))/100.0
+
+
+def xrotor_estimate(params):
+    """
+
+    """
     parameter_convert(params)
 
-    motor_data = pd.read_csv(fPath)
+    db_file = os.path.split(os.path.realpath(__file__))[0] + "\\rotor_db\\motors.db"
+    conn = sqlite3.connect(db_file)
 
+    # 选定电机的拉力数据中可能没有相应选定桨的数据，选定桨肯定有数据，有可能不止一组
+    # 获取电机拉力数据
+    motor_data = pd.read_sql(motor_data_sql(params["motor"]),conn)
+    # 获取数据库中关于选定桨的数据
+    rotor_data = pd.read_sql(motor_data_sql(params["propeller"]),conn)
+
+
+
+def motor_info_sql(motor):
+    sql = {"table":"motorInfo"}
+    sql["condition"] = "Motor='{}'".format(motor)
+    return dql_encapsulate(sql)
+
+def motor_data_sql(motor):
+    sql = {"table":"motorData"}
+    sql["condition"] = "Motor='{}'".format(motor)
+    return dql_encapsulate(sql)
+
+def dql_encapsulate(params):
+    """
+    params = {"table":tablename, "fields":["ID","name",...], "conditions":xxx}
+    """
+    table = params["table"]
+    fields = params.get("fields","")
+    condition = params.get("condition","")
+
+    if not fields:
+        fields = "*"
+
+    fields = ",".join(fields)
+
+    if condition:
+        condition = "WHERE " + condition
+
+    return "SELECT {} FROM {} {};".format(fields, table, condition)
 
 
 if __name__ == "__main__":

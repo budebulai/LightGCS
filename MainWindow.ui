@@ -22,6 +22,10 @@
   <property name="windowTitle">
    <string>LightGCS</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="LightGCS_image.qrc">
+    <normaloff>:/windowicon/LightGCS_image/uplusicon.jpg</normaloff>:/windowicon/LightGCS_image/uplusicon.jpg</iconset>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QGraphicsView" name="gv_setter">
     <property name="geometry">
@@ -1395,7 +1399,7 @@ p, li { white-space: pre-wrap; }
          </font>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tw_insert_data_bat">
          <attribute name="title">
@@ -1616,6 +1620,19 @@ p, li { white-space: pre-wrap; }
           </property>
           <property name="text">
            <string/>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pb_csv_template">
+          <property name="geometry">
+           <rect>
+            <x>350</x>
+            <y>480</y>
+            <width>141</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>生成CSV模板</string>
           </property>
          </widget>
         </widget>
@@ -1926,6 +1943,7 @@ p, li { white-space: pre-wrap; }
         </widget>
        </widget>
       </widget>
+      <widget class="QWidget" name="stw_foc_page"/>
      </widget>
      <widget class="QRadioButton" name="rb_fixedwing_calc">
       <property name="geometry">
@@ -1991,6 +2009,30 @@ p, li { white-space: pre-wrap; }
       </property>
       <property name="text">
        <string>电机数据库</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="rb_foc_esc">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>240</y>
+        <width>161</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>FOC电调调试</string>
       </property>
       <property name="checkable">
        <bool>true</bool>

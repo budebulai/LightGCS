@@ -356,6 +356,7 @@ def create_table_motorData():
                         "Watts INT(6)",\
                         "Thrust FLOAT(8,2)",\
                         "RPM INT(5)",\
+                        "Moment FLOAT(5,2)",\
                         "Efficiency FLOAT(5,2)"]
     create_table(params)
 
