@@ -173,14 +173,11 @@ class xrotor(object):
         print("机臂上反5度时无人机动力系统信息：")
         print(BASIC_DESC_ITA)
 
-
-"""
-电机评估：
-1、绘制图形，转速-拉力、转速-功率、功率-拉力
-2、求解数据对因子: 功率-拉力、拉力-功率、转速-拉力、转速-功率
-"""
 class motor(object):
-
+    """
+    根据电机拉力数据，获取数据中的最大功率，扭矩系数，拉力-功率曲线系数
+    遥杆指令与转速间是什么关系呢？油门百分比与稳态转速呈线性关系，但系数与负载有关。
+    """
     def __init__(self):
 
         self.factors = {}
@@ -270,6 +267,7 @@ class batterty():
         volt: working voltage, such as 22.2, 44.4, etc.
         capacity: LiPo capacity, deault 10000 mAh
         """
+        pass
 
 
     def time_calc(self):
@@ -318,173 +316,53 @@ class airDensity():
 
 class rotorModel():
     """
-    一、螺旋桨拉力逆模型
-    拉力公式：f = C_T * rho * (N / 60)^2 * D^4
-    C_T : 螺旋桨拉力系数
-    rho : 空气密度
-    N ：转速， rpm
-    D : 螺旋桨直径, m
+    剔除数据不全的行:RPM为空
+    因为这两个字段为关键数据
 
-    单个旋翼拉力： f = G / n
-    G ：飞机重量， N
-    n ：螺旋桨个数
-
-    旋翼拉力简化公式：f = c_T * w^2
-        c_T = 1/(4*pi^2)*rho*D^4*C_T
-
-    拉力逆模型：N = 60 * sqrt(G / (n * D^4 * C_T * rho))
-
-    二、转矩模型
-    转矩： M = C_M * rho * (N / 60)^2 * D^5
-    C_M : 螺旋桨转矩系数
-    拉力逆模型：N = 60 * sqrt(G / (n * D^4 * C_T * rho))
-    可知，M = C_M * G / (n * C_T) * D
-
-    旋翼扭矩简化公式： M = c_M * w ^ 2, c_M = 1/(4*pi^2)*rho*D^5*C_M
-
-    the formula for calculating torque
-    http://simplemotor.com/calculations/
-    电机扭矩测试很费劲儿，上述网址给出一个简单的、不甚精确的计算扭矩的公式。
-    1. P_in = I * V
-        P_in : 电机输入电功率
-    2. P_out = T * w
-        P_out ：电机输出机械功率
-        T ：扭矩
-        w ：omega, 角速率，rad/s
-    3. w = N * 2 * pi / 60
-        转速转角速率，rpm --> rad/s
-    4. E = P_out / P_in
-        E : 效率
-    5. P_out = P_in * E
-       => T * w = I * V * E
-       => T * rpm * 2 * pi / 60 = I * V * E
-       => T = (I * V * E * 60)/(rpm * 2 * pi)
-
-    http://simplemotor.com/torque-and-efficiency-calculation/
-    电流、电压、转速可以准确测量，而转换效率却不能准确估计。
-    In general for small electric motors (and the kit motor is not an exception)
-    maximum power is at approximately 50% of stall torque where the speed usually is at 50% of maximum no-load speed.
-    Maximum efficiency is usually at 10-30% of motor stall torque, or at 70-90% of no-load speed.
-    一般地，小型电机最大功率点出现在大约50%堵转力矩处，此时转速约为最大空载转速的50%。
-    而最大效率点为电机堵转力矩10~30%处，或70~90%空载转速处。
-
-    三、电机模型
-    Kv常数解释
-    http://learningrc.com/motor-kv/
-    https://en.wikipedia.org/wiki/Motor_constants
-    Kv值常见的解释为：无刷直流电机空载时每增加1V工作电压增加的转速
-    正确的解释：电机以1标准Kv值转动时产生的反电动势为1V
-    1. K_E = 1/Kv
-        K_E : 反电动势常数, v/rpm
-        Kv : rpm/v
-    2. K_T = T / I_A = 60 / (2 * Pi * Kv) = 9.55 * K_E = 9.55 / Kv
-        K_T ：扭矩系数，N*m/A = V/(rad/s)
-        Kv : rpm/v
-        K_T与K_E是同一回事。
-
-        Kv = 3600 (rpm/v) = 3600 * 2 * pi / 60 (rad/s)
-        T = K_T * I_A = 9.55 / 3600 = 0.00265 (N*m/A)
-        即是说，一个3600Kv的电机，当它转速为3600rpm时，每1A的电枢电流产生的扭矩为0.00265 N*m/A
-    3. Kv值测量
-        http://learningrc.com/motor-kv/
-        Kv = rpm/(v * 1.414 * 0.95)
-
-    输出转矩：
-        M = K_T * （Im - Im0）
-        Im : 等效电流
-        Im0 : 电机空载电流
-
-    等效电流：
-        Im = M / K_T + Im0
-    等效电压：
-        Um = K_E * N + Rm * Im
-        Rm : 电机内阻
-
-    四、电调模型
-        油门百分比： sigma
-        电调调制后的等效直流电压：Ue0
-            Ue0 = Um + Im * Re
-            Re : 电调内阻
-
-            sigma = Ue0 / Ue ~= Ue0 / Ub
-            Ub : 电池电压
-        如果不考虑电调内阻，则
-            sigma = Um / Ub
-
-        电调输入电流：
-            Ie = sigma * Im
-        电调输入电压（电池输出电压）：
-            Ue = Ub - n*Ie*Rb
-            n : 电调个数
-            Rb：电池内阻
-
-    五、电池模型
-        Ib = n * Ie + Iother
-        Iothre : 飞控、云台等电子设备消耗电流
-
-        放电时间(min)：
-            Tb = (Cb - Cmin) / Ib * 60 / 1000
-            Cb : 电池容量，mAh
-            Cmin : 电池放电剩余容量，mAh
-
-    六、桨转动一圈前进的距离
-    http://www.wulong9.com/jiaocheng/20160901631.html
-    螺旋桨规格定义：直径(D) x 螺距(Pitch)
-    Pitch：螺距，桨转动一周前进的距离
-    R：桨半径
-    U：3/4*R处的平均叶片角度
-    转动一圈前进的距离Pitch = 3/4 * R * tan(U)
-    - 3/4半径处圆周长
-        L = 2 * pi * (D/2*3/4) = pi * D * 3 / 4 (inch)
-    - 桨叶平均角度
-        U = atan(Pitch/L) (deg)
-    如22x10桨，平均叶片角度是多少呢？
-        L = 3.1415926 * 22 * 3 / 4 = 51.83627878423158 inch
-        U = atan(10/L) = 10.919083051507858 deg
-        `
-        import numpy as np
-        L = np.pi * 22 * 3 / 4
-        U = np.arctan2(10,L)
-        `
-    如果要进行变距操作，可根据螺旋桨前进的速度来改变螺距角
-
-    关于螺旋桨的另一点，
-    攻角：桨前进方向与翼弦中心线之间的夹角，一般稍低于叶片角度2~5度（视翼型）
-
-    七、性能参数
-        悬停时间
-        油门百分比
-        最大载重
-        最大倾斜角
-        最大飞行速度
-        最大飞行距离
-        综合飞行时间
-        抗风等级
-
+    输出功率 = 扭矩 * 角速度
+    电机转换效率差别有多大呢？实际上不大
+    因此，同一个桨，其模型建立之后，可以放在不同的电机上使用，至于选用什么样的电机，就看其工作特性，能否带的动桨。
+    电机的效率数据，实际上可以认为是桨的效率,同一个桨在不同的电机上测试，效率应该差别不大
     """
+
     def __init__(self, data, params):
         """
-        检索电机测试数据库，查询相应尺寸桨测试数据，计算拉力、扭矩系数
-
+        根据桨拉力数据，计算转速-拉力-扭矩曲线系数，拉力、扭矩系数
+                 ["Motor",\
+                  "Voltage",\
+                  "Propeller",\
+                  "Throttle",\
+                  "Amps",\
+                  "Watts",\
+                  "Thrust",\
+                  "RPM",\
+                  "Moment",\
+                  "Efficiency"]
         """
         self.data = data
         self.params = params
-
-    def data_cleaning(self):
-        """
-        桨数据分组，并剔除数据不全的行
-        """
-        pass
+        self.rotor_factors()
 
     def rotor_factors(self):
         """
-        根据拉力数据计算拉力、扭矩因子
+        数据分组，并根据拉力-转速数据计算拉力、扭矩因子
         """
-        pass
+        self.factors = {}
 
-    
+        max_thrust = self.data["Thrust"].values.max()
+        min_thrust = self.data["Thrust"].values.min()
+        max_power = self.data["Watts"].values.max()
+        min_power = self.data["Watts"].values.min()
 
+        print self.data
 
+        # Thrust --> Watts
+        g = self.data.groupby("Motor")
+        for item in g:
+            pass
+
+        # cT,cM
+        d = self.data[self.data["RPM"].isnull().values == False]
 
 class report_output():
     """
@@ -513,7 +391,7 @@ def parameter_convert(params):
     "motor/propeller"电机、桨指定型号，从数据库查询数据
     "temperature"为近地温度，默认25摄氏度
     "height"无人机飞行高度，默认100m
-    "voltage"无人机动力系统工作电压
+    "voltage"无人机动力系统工作电压,6,10,12S等
     "capacity"无人机能源容量，mAh
     "residual"无人机能量剩余百分比乘以100，可预处理,除以100
     """
@@ -525,23 +403,18 @@ def parameter_convert(params):
     # 机型，其它异型不考虑
     uav_frame = {"Quad":4,"Hexa":6,"Octo":8}
     params["frame"] = uav_frame.get(params["frame"],4)
-
     # 轴距
     params["axisDist"] = float(params.get("axisDist",0))
-
+    # 电压
     params["voltage"] = params.get("voltage","")
     if params["voltage"]:
-        params["voltage"] = float(params["voltage"].split("--")[1].rstrip('V'))
-
+        params["voltage"] = float(params["voltage"].split("--")[0].rstrip('S'))
     # 飞行高度
     params["height"] = float(params.get("height",100.0))
-
     # 近地温度
     params["temperature"] = float(params.get("temperature",25.0))
-
     # 电量
     params["capacity"] = float(params.get("capacity",10000.0))
-
     # 放电剩余百分比
     params["residual"] = float(params.get("residual",15.0))/100.0
 
@@ -557,9 +430,11 @@ def xrotor_estimate(params):
 
     # 选定电机的拉力数据中可能没有相应选定桨的数据，选定桨肯定有数据，有可能不止一组
     # 获取电机拉力数据
-    motor_data = pd.read_sql(motor_data_sql(params["motor"]),conn)
+    motor_data = pd.read_sql(motor_data_sql(motor = params["motor"]),conn)
     # 获取数据库中关于选定桨的数据
-    rotor_data = pd.read_sql(motor_data_sql(params["propeller"]),conn)
+    rotor_data = pd.read_sql(motor_data_sql(propeller = params["propeller"]),conn)
+
+    rotor = rotorModel(rotor_data,params)
 
 
 
@@ -568,9 +443,12 @@ def motor_info_sql(motor):
     sql["condition"] = "Motor='{}'".format(motor)
     return dql_encapsulate(sql)
 
-def motor_data_sql(motor):
+def motor_data_sql(motor=None,propeller=None):
     sql = {"table":"motorData"}
-    sql["condition"] = "Motor='{}'".format(motor)
+    if motor:
+        sql["condition"] = "Motor='{}'".format(motor)
+    if propeller:
+        sql["condition"] = "Propeller='{}'".format(propeller)
     return dql_encapsulate(sql)
 
 def dql_encapsulate(params):

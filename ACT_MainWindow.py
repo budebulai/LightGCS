@@ -38,7 +38,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         """
         Constructor
-
         @param parent reference to the parent widget
         @type QWidget
         """
@@ -47,14 +46,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.initialise()
 
-
     def initialise(self):
         self.side_view_init()
         self.combobox_init()
         self.current_window_init()
 
         self.connection = False
-
 
     def current_window_init(self):
         self.gv_setter.setStyleSheet("border-image: url(:/side_btn/LightGCS_image/setter_pressed.png);")
@@ -103,8 +100,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def gv_setter_init(self):
+        """
+        add push button here
+        """
         self.gv_setter.mousePressEvent = self.on_setter_mouseClicked
-        self.setter_btns = [self.pb_firmware,self.pb_frame,self.pb_accel,self.pb_compass,self.pb_radio,self.pb_flt_mode,self.pb_pid]
+        self.setter_btns = [self.pb_firmware,\
+                            self.pb_frame,\
+                            self.pb_accel,\
+                            self.pb_compass,\
+                            self.pb_radio,\
+                            self.pb_flt_mode,\
+                            self.pb_pid,\
+                            self.pb_peripheral]
         self.setter_btn_clicked(self.pb_firmware)
 
     def setter_btn_clicked(self,obj):
@@ -115,7 +122,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def setter_btn_reset(self):
         for item in self.setter_btns:
-            item.setStyleSheet("background-color: rgb(225,225,225)")
+            item.setStyleSheet("background-color: rgb(225, 225, 225);\ncolor: rgb(0, 0, 0);")
 
     def combobox_init(self):
         self.combobox_port_init()
@@ -222,7 +229,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #设置行背景交替色
         self.tv_params.setAlternatingRowColors(True);
-        self.tv_params.setStyleSheet("{background-color: rgb(255, 255, 255);" "alternate-background-color: rgb(225, 225, 225);}");
+        self.tv_params.setStyleSheet("background-color: rgb(255, 255, 255);\nalternate-background-color: rgb(225, 225, 225);");
 
         self.table_view_model = QStandardItemModel(self.tv_params)
 
@@ -312,8 +319,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.current_baud = int(p0)
 
     def pb_connection_reset(self):
-        self.pb_connection.setText("CONNECT")
-        self.pb_connection.setStyleSheet("background-color: rgb(204, 255, 102)")
+        self.pb_connection.setText("连接")
+        self.pb_connection.setStyleSheet("background-color: rgb(204, 204, 102);\ncolor: rgb(0,0,0)")
 
     @pyqtSlot()
     def on_pb_connection_clicked(self):
@@ -330,12 +337,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
 
         if not self.connection:
-            self.vehicle = connect(port,  baud=int(self.cb_comm_rate.currentText()), wait_ready=True, status_printer = self.tb_console.append)
+            try:
+                self.vehicle = connect(port,  wait_ready=True, status_printer = self.tb_console.append, baud=int(self.cb_comm_rate.currentText()))
+            except Exception as e:
+                self.vehicle = None
+                print str(e)
 
             if self.vehicle:
                 self.connection = True
                 self.pb_connection.setText("CONNECTED")
-                self.pb_connection.setStyleSheet("background-color: rgb(51, 153, 51)")
+                self.pb_connection.setStyleSheet("{background-color: rgb(51, 153, 51)}")
             else:
                 self.pb_connection_reset()
         else:
@@ -398,6 +409,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         # TODO: not implemented yet
         self.setter_btn_clicked(self.pb_pid)
+
+    @pyqtSlot()
+    def on_pb_peripheral_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        # TODO: not implemented yet
+        self.setter_btn_clicked(self.pb_peripheral)
 
     @pyqtSlot()
     def on_pb_custom_fw_clicked(self):
@@ -848,7 +867,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def motor_table_view_init(self,table_view):
         #设置行背景交替色
         table_view.setAlternatingRowColors(True);
-        table_view.setStyleSheet("{background-color: rgb(255, 255, 255);" "alternate-background-color: rgb(225, 225, 225);}");
+        table_view.setStyleSheet("background-color: rgb(255, 255, 255);\nalternate-background-color: rgb(225, 225, 225);");
         #隐藏侧边序号
         table_view.verticalHeader().setHidden(True)
         table_view.setModel(self.motor_table_view_model)

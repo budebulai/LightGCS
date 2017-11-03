@@ -61,7 +61,7 @@ ALTER TABLE XXX AUTO_INCREMENT=10;
 # 电机数据库文件
 motor_db = os.path.split(os.path.realpath(__file__))[0] + "\\rotor_db\\motors.db"
 
-def connect(db):
+def connect_db(db):
     """
     sqlite3装饰器
     """
@@ -95,21 +95,21 @@ def connect(db):
 """
 DDL
 """
-@connect(motor_db)
+@connect_db(motor_db)
 def drop_db(params):
     """
     params = {"database":database}
     """
     return "DROP DATABASE IF EXISTS {};".format(params["database"])
 
-@connect(motor_db)
+@connect_db(motor_db)
 def drop_table(params):
     """
     params = {"table":tablename}
     """
     return "DROP TABLE IF EXISTS {};".format(params["table"])
 
-@connect(motor_db)
+@connect_db(motor_db)
 def create_table(params):
     """
     params = {"table":tablename, "fields":["ID int AUTO_INCREMENT PRIMARY KEY NOT NULL COMMENT XXX","name text DEFAULT XXX",...]}
@@ -118,7 +118,7 @@ def create_table(params):
     fields = ",".join(params["fields"])
     return "CREATE TABLE IF NOT EXISTS {}({});".format(table,fields)
 
-@connect(motor_db)
+@connect_db(motor_db)
 def alter_table(params):
     """
     params = {"table":tablename,
@@ -139,7 +139,7 @@ def alter_table(params):
 """
 DML
 """
-@connect(motor_db)
+@connect_db(motor_db)
 def insert_items(params):
     """
     params = {"table":tablename, "fields":["ID","name",...], "values":[[],[],...]}
@@ -180,7 +180,7 @@ def insert_items(params):
     # print "INSERT INTO {} {} VALUES{};".format(table,fields,values)
     return "INSERT INTO {} {} VALUES{};".format(table,fields,values)
 
-@connect(motor_db)
+@connect_db(motor_db)
 def update_table(params):
     """
     params = {"table":tablename,"fields":{"col1":value,"col2":value,...}, "condition": "where ..."}
@@ -203,7 +203,7 @@ def update_table(params):
 
     return "UPDATE {} SET {} {};".format(table,values,condition)
 
-@connect(motor_db)
+@connect_db(motor_db)
 def delete_items(params):
     """
     params = {"table":tablename,"condition":xxx}
@@ -215,7 +215,7 @@ def delete_items(params):
     # print "DELETE FROM {} {};".format(params["table"],condition)
     return "DELETE FROM {} {};".format(params["table"],condition)
 
-@connect(motor_db)
+@connect_db(motor_db)
 def truncate_table(params):
     """
     params = {"table":tablename}
@@ -232,11 +232,11 @@ def truncate_table(params):
 """
 DQL
 """
-@connect(motor_db)
+@connect_db(motor_db)
 def show_tables():
     return "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
 
-@connect(motor_db)
+@connect_db(motor_db)
 def table_query(params):
     """
     params = {"table":tablename, "fields":["ID","name",...], "conditions":xxx}
@@ -255,7 +255,7 @@ def table_query(params):
 
     return "SELECT {} FROM {} {};".format(fields, table, condition)
 
-@connect(motor_db)
+@connect_db(motor_db)
 def head_query(params):
     """
     params = {"table":tablename}
