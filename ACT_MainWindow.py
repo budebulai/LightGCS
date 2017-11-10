@@ -11,7 +11,8 @@ from PyQt5.QtWidgets import QApplication, \
                             QHeaderView, \
                             QMessageBox,\
                             QButtonGroup, \
-                            QComboBox
+                            QComboBox,\
+                            QDoubleSpinBox
 
 from PyQt5.QtGui import QStandardItemModel,QStandardItem
 from PyQt5.QtSql import QSqlTableModel,QSqlDatabase
@@ -229,7 +230,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #设置行背景交替色
         self.tv_params.setAlternatingRowColors(True);
-        self.tv_params.setStyleSheet("background-color: rgb(255, 255, 255);\nalternate-background-color: rgb(225, 225, 225);");
+        self.tv_params.setStyleSheet("background-color: rgb(225, 225, 225);\nalternate-background-color: rgb(255, 255, 255);\ncolor: rgb(0,0,0);");
 
         self.table_view_model = QStandardItemModel(self.tv_params)
 
@@ -319,7 +320,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.current_baud = int(p0)
 
     def pb_connection_reset(self):
-        self.pb_connection.setText("连接")
+        self.pb_connection.setText("未连接")
         self.pb_connection.setStyleSheet("background-color: rgb(204, 204, 102);\ncolor: rgb(0,0,0)")
 
     @pyqtSlot()
@@ -345,8 +346,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.vehicle:
                 self.connection = True
-                self.pb_connection.setText("CONNECTED")
-                self.pb_connection.setStyleSheet("{background-color: rgb(51, 153, 51)}")
+                self.pb_connection.setText("已连接")
+                self.pb_connection.setStyleSheet("background-color: rgb(51, 153, 51);")
             else:
                 self.pb_connection_reset()
         else:
@@ -373,42 +374,52 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     @pyqtSlot()
     def on_pb_accel_clicked(self):
         """
-        Slot documentation goes here.
+        enter accelebrator calibrating window
         """
-        # TODO: not implemented yet
         self.setter_btn_clicked(self.pb_accel)
 
     @pyqtSlot()
     def on_pb_compass_clicked(self):
         """
-        Slot documentation goes here.
+        enter compass calibrating window
         """
-        # TODO: not implemented yet
         self.setter_btn_clicked(self.pb_compass)
 
     @pyqtSlot()
     def on_pb_radio_clicked(self):
         """
-        Slot documentation goes here.
+        enter rc calibrating window
         """
-        # TODO: not implemented yet
         self.setter_btn_clicked(self.pb_radio)
 
     @pyqtSlot()
     def on_pb_flt_mode_clicked(self):
         """
-        Slot documentation goes here.
+        enter flight mode setting window
         """
-        # TODO: not implemented yet
         self.setter_btn_clicked(self.pb_flt_mode)
 
     @pyqtSlot()
     def on_pb_pid_clicked(self):
         """
-        Slot documentation goes here.
+        enter pid params window
         """
-        # TODO: not implemented yet
         self.setter_btn_clicked(self.pb_pid)
+
+    @pyqtSlot()
+    def on_pb_fixedwing_pid_screen_clicked(self):
+        """
+        read fixedwing pid params
+        """
+        cbs = self.f_pid.findChildren(QDoubleSpinBox)
+        for item in cbs:
+            print item.objectName()
+        if not self.connection:
+            return
+
+        # import setting.pid_params
+
+
 
     @pyqtSlot()
     def on_pb_peripheral_clicked(self):
@@ -443,7 +454,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def firmware_uploader(self,fp):
         if self.connection:
-            self.upload_state_update("Please unconnect apm!")
+            self.upload_state_update("请先断开飞控连接!")
             return
 
         if not self.serial_list:
@@ -451,11 +462,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             while count < 30 and not self.serial_list:
                 time.sleep(1)
                 count += 1
-                info = "Plugin flight controller board, remaining: %s s"%(30 - count)
+                info = "请用USB连接飞控, 剩余时间: %s s"%(30 - count)
                 self.upload_state_update(info)
                 self.combobox_port_update()
             if count >= 30:
-                self.upload_state_update("Time Out!")
+                self.upload_state_update("超时!")
                 return
 
         self.upload_state_update(fp)

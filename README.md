@@ -4,9 +4,12 @@ python libs:
 - mavlink
 - pymavlink
 - dronekit
+- [pyqtgraph](http://www.pyqtgraph.org/documentation/)
 - px4_upload.py
 - loganalyzer
-- ...
+- ref [MAVExplorer](http://ardupilot.github.io/MAVProxy/html/index.html)
+
+-
 
 No need to install the libs above.
 
