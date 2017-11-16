@@ -354,7 +354,7 @@ color: rgb(255, 255, 255);</string>
      <string/>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="stw_setter">
      <widget class="QTextBrowser" name="tb_console">
@@ -3068,7 +3068,7 @@ background-color: rgb(255, 255, 255);</string>
 color: rgb(0, 0, 0);</string>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="x_pid">
          <attribute name="title">
@@ -6808,6 +6808,20 @@ background-color: rgb(255, 255, 255);</string>
            <string>恢复默认</string>
           </property>
          </widget>
+         <zorder>x_pid_box_1</zorder>
+         <zorder>x_pid_box_6</zorder>
+         <zorder>x_pid_box_7</zorder>
+         <zorder>hs_throttle_smooth</zorder>
+         <zorder>label_97</zorder>
+         <zorder>hs_rol_spd_pid</zorder>
+         <zorder>label_98</zorder>
+         <zorder>hs_pit_spd_pid</zorder>
+         <zorder>label_99</zorder>
+         <zorder>pb_copter_pid_set</zorder>
+         <zorder>pb_copter_pid_screen</zorder>
+         <zorder>pb_copter_pid_reset</zorder>
+         <zorder>x_pid_box_10</zorder>
+         <zorder>x_pid_box_13</zorder>
         </widget>
         <widget class="QWidget" name="f_pid">
          <attribute name="title">
@@ -7032,6 +7046,12 @@ background-color: rgb(255, 255, 255);</string>
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="singleStep">
+            <double>0.001000000000000</double>
+           </property>
           </widget>
           <widget class="QDoubleSpinBox" name="f_rol_i">
            <property name="geometry">
@@ -7046,6 +7066,12 @@ background-color: rgb(255, 255, 255);</string>
             <font>
              <pointsize>10</pointsize>
             </font>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="singleStep">
+            <double>0.001000000000000</double>
            </property>
           </widget>
           <widget class="QLabel" name="label_31">
@@ -7080,6 +7106,12 @@ background-color: rgb(255, 255, 255);</string>
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="singleStep">
+            <double>0.001000000000000</double>
+           </property>
           </widget>
           <widget class="QLabel" name="label_32">
            <property name="geometry">
@@ -7112,6 +7144,12 @@ background-color: rgb(255, 255, 255);</string>
             <font>
              <pointsize>10</pointsize>
             </font>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="singleStep">
+            <double>0.001000000000000</double>
            </property>
           </widget>
           <widget class="QLabel" name="label_33">
@@ -8254,7 +8292,23 @@ background-color: rgb(255, 255, 255);
             <string>失速速度(m/s)</string>
            </property>
           </widget>
+          <zorder>f_tilt_time</zorder>
+          <zorder>f_tilt_failspeed</zorder>
+          <zorder>label_64</zorder>
+          <zorder>label_63</zorder>
          </widget>
+         <zorder>pb_fixedwing_pid_set</zorder>
+         <zorder>pb_fixedwing_pid_screen</zorder>
+         <zorder>pb_fixedwing_pid_reset</zorder>
+         <zorder>f_pid_box_1</zorder>
+         <zorder>f_pid_box_2</zorder>
+         <zorder>f_pid_box_3</zorder>
+         <zorder>f_pid_box_4</zorder>
+         <zorder>f_pid_box_5</zorder>
+         <zorder>f_pid_box_6</zorder>
+         <zorder>f_pid_box_7</zorder>
+         <zorder>f_pid_box_8</zorder>
+         <zorder>f_pid_box_9</zorder>
         </widget>
        </widget>
       </widget>
@@ -8284,6 +8338,34 @@ background-color: rgb(255, 255, 255);
         <y>0</y>
         <width>900</width>
         <height>715</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pb_read_log">
+      <property name="geometry">
+       <rect>
+        <x>910</x>
+        <y>46</y>
+        <width>105</width>
+        <height>49</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>加载日志</string>
+      </property>
+     </widget>
+     <widget class="QTreeView" name="tv_msg">
+      <property name="geometry">
+       <rect>
+        <x>900</x>
+        <y>110</y>
+        <width>123</width>
+        <height>605</height>
        </rect>
       </property>
      </widget>
@@ -8474,7 +8556,7 @@ background-color: rgb(255, 255, 255);</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="xrotor_calc">
        <widget class="QGroupBox" name="xrotor_ecalc">
@@ -8482,8 +8564,8 @@ background-color: rgb(255, 255, 255);</string>
          <rect>
           <x>6</x>
           <y>6</y>
-          <width>801</width>
-          <height>191</height>
+          <width>873</width>
+          <height>185</height>
          </rect>
         </property>
         <property name="font">
@@ -8715,7 +8797,7 @@ color: rgb(0, 0, 0);</string>
         <widget class="QPushButton" name="pb_xrotor_calc">
          <property name="geometry">
           <rect>
-           <x>670</x>
+           <x>640</x>
            <y>140</y>
            <width>121</width>
            <height>41</height>
@@ -9086,6 +9168,16 @@ color: rgb(0, 0, 0);</string>
          </property>
         </widget>
        </widget>
+       <widget class="QTextBrowser" name="tb_copter_result">
+        <property name="geometry">
+         <rect>
+          <x>6</x>
+          <y>190</y>
+          <width>873</width>
+          <height>525</height>
+         </rect>
+        </property>
+       </widget>
       </widget>
       <widget class="QWidget" name="fixedwing_calc"/>
       <widget class="QWidget" name="tiltrotor_calc"/>
@@ -9093,10 +9185,10 @@ color: rgb(0, 0, 0);</string>
        <widget class="QTabWidget" name="tw_motor_db">
         <property name="geometry">
          <rect>
-          <x>2</x>
-          <y>5</y>
-          <width>879</width>
-          <height>711</height>
+          <x>6</x>
+          <y>6</y>
+          <width>875</width>
+          <height>709</height>
          </rect>
         </property>
         <property name="font">
@@ -9958,6 +10050,183 @@ color: rgb(0, 0, 0);</string>
    <header>pyqtgraph</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>pb_firmware</tabstop>
+  <tabstop>pb_frame</tabstop>
+  <tabstop>pb_accel</tabstop>
+  <tabstop>pb_compass</tabstop>
+  <tabstop>pb_radio</tabstop>
+  <tabstop>pb_flt_mode</tabstop>
+  <tabstop>pb_pid</tabstop>
+  <tabstop>pb_peripheral</tabstop>
+  <tabstop>f_rol_p</tabstop>
+  <tabstop>f_rol_i</tabstop>
+  <tabstop>f_rol_d</tabstop>
+  <tabstop>f_rol_imax</tabstop>
+  <tabstop>f_pit_p</tabstop>
+  <tabstop>f_pit_i</tabstop>
+  <tabstop>f_pit_d</tabstop>
+  <tabstop>f_pit_imax</tabstop>
+  <tabstop>f_yaw_p</tabstop>
+  <tabstop>f_yaw_i</tabstop>
+  <tabstop>f_yaw_d</tabstop>
+  <tabstop>f_yaw_imax</tabstop>
+  <tabstop>f_cruise_pct</tabstop>
+  <tabstop>f_throttle_min_pct</tabstop>
+  <tabstop>f_throttle_max_pct</tabstop>
+  <tabstop>f_rotate_speed</tabstop>
+  <tabstop>f_cruise_speed</tabstop>
+  <tabstop>f_speed_min</tabstop>
+  <tabstop>f_speed_max</tabstop>
+  <tabstop>f_speed_pct</tabstop>
+  <tabstop>f_angle_rol_limit</tabstop>
+  <tabstop>f_angle_pitch_up_max</tabstop>
+  <tabstop>f_angle_pitch_down_max</tabstop>
+  <tabstop>f_climb_spd_max</tabstop>
+  <tabstop>f_descend_spd_min</tabstop>
+  <tabstop>f_descend_spd_max</tabstop>
+  <tabstop>f_pitch_restrain</tabstop>
+  <tabstop>f_tecs_time</tabstop>
+  <tabstop>f_l1_period</tabstop>
+  <tabstop>f_l1_drag</tabstop>
+  <tabstop>f_pid_box_9</tabstop>
+  <tabstop>f_tilt_time</tabstop>
+  <tabstop>f_tilt_failspeed</tabstop>
+  <tabstop>x_rol_p</tabstop>
+  <tabstop>x_pit_p</tabstop>
+  <tabstop>x_yaw_p</tabstop>
+  <tabstop>x_rol_spd_p</tabstop>
+  <tabstop>x_rol_spd_i</tabstop>
+  <tabstop>x_rol_spd_d</tabstop>
+  <tabstop>x_rol_spd_imax</tabstop>
+  <tabstop>x_rol_spd_filter</tabstop>
+  <tabstop>x_pit_spd_p</tabstop>
+  <tabstop>x_pit_spd_i</tabstop>
+  <tabstop>x_pit_spd_d</tabstop>
+  <tabstop>x_pit_spd_imax</tabstop>
+  <tabstop>x_pit_spd_filter</tabstop>
+  <tabstop>x_yaw_spd_p</tabstop>
+  <tabstop>x_yaw_spd_i</tabstop>
+  <tabstop>x_yaw_spd_d</tabstop>
+  <tabstop>x_yaw_spd_imax</tabstop>
+  <tabstop>x_yaw_spd_filter</tabstop>
+  <tabstop>x_height_hold_p</tabstop>
+  <tabstop>x_throttle_spd_p</tabstop>
+  <tabstop>x_throttle_accel_p</tabstop>
+  <tabstop>x_throttle_accel_i</tabstop>
+  <tabstop>x_throttle_accel_d</tabstop>
+  <tabstop>x_throttle_accel_imax</tabstop>
+  <tabstop>x_loiter_p</tabstop>
+  <tabstop>x_loiter_spd_p</tabstop>
+  <tabstop>x_loiter_spd_i</tabstop>
+  <tabstop>x_loiter_spd_d</tabstop>
+  <tabstop>x_loiter_spd_imax</tabstop>
+  <tabstop>x_nav_spd</tabstop>
+  <tabstop>x_nav_wp_radius</tabstop>
+  <tabstop>x_nav_climb_spd</tabstop>
+  <tabstop>x_nav_descend_spd</tabstop>
+  <tabstop>x_nav_land_spd</tabstop>
+  <tabstop>hs_throttle_smooth</tabstop>
+  <tabstop>hs_rol_spd_pid</tabstop>
+  <tabstop>hs_pit_spd_pid</tabstop>
+  <tabstop>gv_monitor</tabstop>
+  <tabstop>gv_logger</tabstop>
+  <tabstop>gv_params</tabstop>
+  <tabstop>gv_exts</tabstop>
+  <tabstop>gv_about</tabstop>
+  <tabstop>cb_comm_name</tabstop>
+  <tabstop>cb_comm_rate</tabstop>
+  <tabstop>pb_connection</tabstop>
+  <tabstop>pb_copter_pid_set</tabstop>
+  <tabstop>pb_copter_pid_screen</tabstop>
+  <tabstop>pb_copter_pid_reset</tabstop>
+  <tabstop>pb_fixedwing_pid_set</tabstop>
+  <tabstop>pb_fixedwing_pid_screen</tabstop>
+  <tabstop>comboBox_11</tabstop>
+  <tabstop>doubleSpinBox_5</tabstop>
+  <tabstop>checkBox</tabstop>
+  <tabstop>comboBox_10</tabstop>
+  <tabstop>pb_custom_fw</tabstop>
+  <tabstop>comboBox</tabstop>
+  <tabstop>gv_wired_copter</tabstop>
+  <tabstop>gv_fixed_wing</tabstop>
+  <tabstop>gv_tiltor</tabstop>
+  <tabstop>textEdit_5</tabstop>
+  <tabstop>comboBox_9</tabstop>
+  <tabstop>checkBox_2</tabstop>
+  <tabstop>checkBox_8</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>comboBox_2</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>comboBox_3</tabstop>
+  <tabstop>comboBox_4</tabstop>
+  <tabstop>comboBox_5</tabstop>
+  <tabstop>doubleSpinBox_6</tabstop>
+  <tabstop>tb_console</tabstop>
+  <tabstop>pb_fixedwing_pid_reset</tabstop>
+  <tabstop>comboBox_6</tabstop>
+  <tabstop>comboBox_7</tabstop>
+  <tabstop>doubleSpinBox</tabstop>
+  <tabstop>doubleSpinBox_2</tabstop>
+  <tabstop>doubleSpinBox_3</tabstop>
+  <tabstop>checkBox_3</tabstop>
+  <tabstop>checkBox_4</tabstop>
+  <tabstop>comboBox_8</tabstop>
+  <tabstop>lineEdit</tabstop>
+  <tabstop>gv_curves_plot</tabstop>
+  <tabstop>pb_params_read</tabstop>
+  <tabstop>pb_params_tree</tabstop>
+  <tabstop>pb_params_set</tabstop>
+  <tabstop>pb_params_save</tabstop>
+  <tabstop>tv_params</tabstop>
+  <tabstop>pb_params_table</tabstop>
+  <tabstop>rb_xrotor_calc</tabstop>
+  <tabstop>cb_copter_frame</tabstop>
+  <tabstop>cb_motor_type</tabstop>
+  <tabstop>cb_prop_type</tabstop>
+  <tabstop>le_weight</tabstop>
+  <tabstop>le_battery_capacity</tabstop>
+  <tabstop>pb_xrotor_calc</tabstop>
+  <tabstop>pb_xrotor_reset</tabstop>
+  <tabstop>cb_volt</tabstop>
+  <tabstop>le_flight_height</tabstop>
+  <tabstop>le_capacity_residual</tabstop>
+  <tabstop>le_uav_axisDist</tabstop>
+  <tabstop>le_ground_temperature</tabstop>
+  <tabstop>tw_motor_db</tabstop>
+  <tabstop>pb_motor_db_file_insert</tabstop>
+  <tabstop>pb_motor_db_file_remove</tabstop>
+  <tabstop>pb_motor_db_insert_confirm</tabstop>
+  <tabstop>pb_motor_db_file_read</tabstop>
+  <tabstop>pb_motor_db_doc_select</tabstop>
+  <tabstop>lw_motor_test_files</tabstop>
+  <tabstop>lw_motor_db_files</tabstop>
+  <tabstop>pb_csv_template</tabstop>
+  <tabstop>cb_motor_db_productor</tabstop>
+  <tabstop>cb_motor_db_type</tabstop>
+  <tabstop>cb_motor_db_kv</tabstop>
+  <tabstop>cb_motor_db_propeller</tabstop>
+  <tabstop>pb_motor_data_sql</tabstop>
+  <tabstop>cb_motor_db_volt</tabstop>
+  <tabstop>tv_motor_data</tabstop>
+  <tabstop>tv_motor_tables</tabstop>
+  <tabstop>cb_motor_tables</tabstop>
+  <tabstop>pb_motor_db_update</tabstop>
+  <tabstop>pb_motor_table_show</tabstop>
+  <tabstop>pb_motor_db_insert_row</tabstop>
+  <tabstop>pb_motor_db_delete_row</tabstop>
+  <tabstop>rb_fixedwing_calc</tabstop>
+  <tabstop>rb_tiltrotor_calc</tabstop>
+  <tabstop>rb_rotor_database</tabstop>
+  <tabstop>rb_foc_esc</tabstop>
+  <tabstop>checkBox_9</tabstop>
+  <tabstop>tw_pid</tabstop>
+  <tabstop>doubleSpinBox_4</tabstop>
+  <tabstop>textEdit_6</tabstop>
+  <tabstop>checkBox_5</tabstop>
+  <tabstop>checkBox_6</tabstop>
+  <tabstop>checkBox_7</tabstop>
+ </tabstops>
  <resources>
   <include location="LightGCS_image.qrc"/>
  </resources>

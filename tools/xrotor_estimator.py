@@ -1,10 +1,129 @@
 # -*- coding:utf-8 -*-
 
-import os
+# import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sqlite3
+from sql_tool import *
+from PyQt5.QtWidgets import QMessageBox, QComboBox
+import threading
+from actions import wonf
+
+@wonf
+def xrotor_params_init(self):
+    """
+    Init xrotor groupbox all QCombobox
+    """
+    # db table init
+    create_table_motorList()
+    create_table_motorData()
+    create_table_motorInfo()
+    create_table_propellerInfo()
+
+    self.xrotor_params = [self.le_weight, \
+                          self.cb_copter_frame, \
+                          self.le_uav_axisDist, \
+                          self.le_flight_height, \
+                          self.le_ground_temperature, \
+                          self.cb_motor_type, \
+                          self.cb_prop_type, \
+                          self.cb_volt, \
+                          self.le_battery_capacity, \
+                          self.le_capacity_residual]
+    self.xrotor_params_key = ["weight", \
+                              "frame", \
+                              "axisDist", \
+                              "height", \
+                              "temperature", \
+                              "motor", \
+                              "propeller", \
+                              "voltage", \
+                              "capacity", \
+                              "residual"]
+
+    self.cb_copter_frame.clear()
+    self.cb_copter_frame.addItems(["", "Quad", "Hexa", "Octo"])
+
+    params = {"table": "motorData"}
+    params["fields"] = ["Motor", "Propeller"]
+    ret = table_query(params)
+
+    motors = set([item[0] for item in ret if item[0]])
+    propellers = set([str(item[1]) for item in ret if item[1]])
+
+    self.cb_motor_type.clear()
+    self.cb_motor_type.addItem("")
+    self.cb_motor_type.addItems(motors)
+    self.cb_prop_type.clear()
+    self.cb_prop_type.addItem("")
+    self.cb_prop_type.addItems(propellers)
+
+    volt_list = [""]
+    for i in range(2, 13):
+        item = "{}S--{:.1f}V".format(i, i * 3.7)
+        volt_list.append(item)
+    self.cb_volt.clear()
+    self.cb_volt.addItems(volt_list)
+
+    self.xrotor_initialised = True
+
+@wonf
+def check_xrotor_params(self, params):
+    if not (params["weight"] and params["frame"] and params["motor"] and params["propeller"]):
+        return False
+    try:
+        "convert string weight to int"
+        params["weight"] = int(params["weight"])
+        assert params["weight"] > 0
+
+        for i in range(len(self.xrotor_params_key)):
+            if isinstance(self.xrotor_params[i], QComboBox):
+                continue
+            if params[self.xrotor_params_key[i]]:
+                params[self.xrotor_params_key[i]] = float(params[self.xrotor_params_key[i]])
+                if self.xrotor_params_key[i] == "temperature":
+                    continue
+                assert params[self.xrotor_params_key[i]] > 0
+
+    except Exception:
+        return False
+    return True
+
+@wonf
+def copter_estimator(self):
+    # get params
+    param_values = []
+    for i in range(len(self.xrotor_params)):
+        if isinstance(self.xrotor_params[i],QComboBox):
+            param_values.append(self.xrotor_params[i].currentText())
+        else:
+            param_values.append(self.xrotor_params[i].text())
+    params = dict(zip(self.xrotor_params_key, param_values))
+
+    if self.check_xrotor_params(params):
+        xrotor_estimate_thread = threading.Thread(target=estimator,args=(params,))
+        xrotor_estimate_thread.setDaemon(True)
+        xrotor_estimate_thread.start()
+    else:
+        """
+        StandardButton QMessageBox::critical(
+            QWidget *parent,
+            const QString &title,
+            const QString &text,
+            StandardButtons buttons = Ok,
+            StandardButton defaultButton = NoButton)
+        """
+        mb_text = "You have selected parameters below"
+        just = 0
+        for key, _ in params.items():
+            just = max(len(key),just)
+
+        lst = ['%s: %s' % (k.rjust(just), str(v)) for (k, v) in params.items()]
+        lst.sort()
+        mb_text = '\n'.join(lst)
+
+        QMessageBox.critical(self, "Parameters Invalid", mb_text)
 
 """
 旋翼机评估：
@@ -419,7 +538,7 @@ def parameter_convert(params):
     params["residual"] = float(params.get("residual",15.0))/100.0
 
 
-def xrotor_estimate(params):
+def estimator(params):
     """
 
     """

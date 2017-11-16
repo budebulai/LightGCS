@@ -9,3 +9,6 @@ _eric6project
 *.e4p
 *.txt
 *.svg
+*.params
+*.idea
+.idea/*
