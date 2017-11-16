@@ -5,10 +5,10 @@
 message_definitions
 LightGCS_image
 _eric6project
-*.qrc
 *.e4p
 *.txt
 *.svg
 *.params
 *.idea
-.idea/*
+idea/vcs.xml
+MainWindow.py

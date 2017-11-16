@@ -1,0 +1,35 @@
+<RCC>
+  <qresource prefix="side_btn">
+    <file>LightGCS_image/about.png</file>
+    <file>LightGCS_image/exts.png</file>
+    <file>LightGCS_image/exts_on.png</file>
+    <file>LightGCS_image/exts_pressed.png</file>
+    <file>LightGCS_image/params.png</file>
+    <file>LightGCS_image/params_on.png</file>
+    <file>LightGCS_image/params_pressed.png</file>
+    <file>LightGCS_image/monitor.png</file>
+    <file>LightGCS_image/monitor_on.png</file>
+    <file>LightGCS_image/monitor_pressed.png</file>
+    <file>LightGCS_image/setter.png</file>
+    <file>LightGCS_image/logger.png</file>
+    <file>LightGCS_image/logger_on.png</file>
+    <file>LightGCS_image/logger_pressed.png</file>
+    <file>LightGCS_image/setter_on.png</file>
+    <file>LightGCS_image/setter_pressed.png</file>
+  </qresource>
+  <qresource prefix="fi_img">
+    <file>monitor/flightInstruments/img/adi/adi.svg</file>
+    <file>monitor/flightInstruments/img/adi/adi_back.svg</file>
+    <file>monitor/flightInstruments/img/adi/adi_case.svg</file>
+    <file>monitor/flightInstruments/img/adi/adi_face.svg</file>
+    <file>monitor/flightInstruments/img/adi/adi_ring.svg</file>
+  </qresource>
+  <qresource prefix="uav_img">
+    <file>LightGCS_image/wiredcopter.jpg</file>
+    <file>LightGCS_image/fixedwing.png</file>
+    <file>LightGCS_image/tiltor.png</file>
+  </qresource>
+  <qresource prefix="windowicon">
+    <file>LightGCS_image/uplusicon.jpg</file>
+  </qresource>
+</RCC>
