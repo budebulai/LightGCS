@@ -1,37 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-############################################################################
-#
-#   Copyright (C) 2012-2015 PX4 Development Team. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in
-#    the documentation and/or other materials provided with the
-#    distribution.
-# 3. Neither the name PX4 nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
-#    without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
-# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-############################################################################
 
 #
 # Serial firmware uploader for the PX4FMU bootloader
@@ -55,7 +23,7 @@
 from __future__ import print_function
 
 import sys
-#import argparse
+# import argparse
 import binascii
 import serial
 import struct
@@ -64,9 +32,11 @@ import zlib
 import base64
 import time
 import array
-import os
+# import os
+import threading
+from PyQt5.QtWidgets import QFileDialog
 
-from sys import platform as _platform
+# from sys import platform as _platform
 
 
 class firmware(object):
@@ -641,3 +611,23 @@ def firmware_uploader(self, fp):
         count += 1
     self.upload_state_update("超时")
     self.upload_complete = True
+
+@wonf
+def custom_fw_select_event(self):
+    opt = QFileDialog.Options()
+    # opt |= QFileDialog.DontUseNativeDialog
+    fp, _ = QFileDialog.getOpenFileName(self, "选择固件", "", "APM Firmware Files (*.px4;*.elf);;All Files (*)",
+                                        options=opt)
+
+    if not fp:
+        self.upload_state_update("No Valid Firmware!")
+        return
+    # 运行一次，防止飞控强制断开，如断开USB线
+    self.upload_complete = False
+    self.combobox_port_update()
+    fw_thread = threading.Thread(target=self.firmware_uploader, args=(fp,))
+    fw_thread.setDaemon(True)
+    fw_thread.start()
+
+    if self.upload_complete:
+        fw_thread.join()

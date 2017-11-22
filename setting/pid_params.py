@@ -121,8 +121,8 @@ class copterPID(uavPID):
         """
         super(fwPID,self).__init__(params, obj)
 
-    def :
-        pass
+    # def :
+    #     pass
 
 class fwPID(uavPID):
     def __init__(self, params, obj):

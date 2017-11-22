@@ -4,7 +4,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import sqlite3
 from sql_tool import *
 from PyQt5.QtWidgets import QMessageBox, QComboBox
 import threading

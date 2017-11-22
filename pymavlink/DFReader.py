@@ -93,7 +93,6 @@ class DFMessage(object):
 
     def to_dict(self):
         d = {'mavpackettype': self.fmt.name}
-
         for field in self._fieldnames:
             d[field] = self.__getattr__(field)
 
